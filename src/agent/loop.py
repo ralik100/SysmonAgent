@@ -20,12 +20,11 @@ def run():
     value = integer number between 0 and 100
     unit = %
     """
-    file = logger.init()
     while True:
         for (metric, collector) in METRICS.items():
             value=collector()
             event = make_metric_event(metric, value)
-            logger.log(event,file)
+            logger.log(event)
         time.sleep(5)
 
 
