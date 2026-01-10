@@ -5,13 +5,8 @@ import time
 import logger
 
 
-METRICS={
-    "cpu_usage" : cpu.get_cpu_usage,
-    "ram_usage" : ram.get_ram_usage,
-    "disc_usage": disc.get_disc_usage
-}
 
-def run():
+def run(interval, active_metrics, warning_level):
     """
     timestamp = time of event generated in ISO 8601 + UTC
     level = level of urgency
@@ -21,15 +16,17 @@ def run():
     unit = %
     """
     while True:
-        for (metric, collector) in METRICS.items():
+        for (metric, collector) in active_metrics.items():
+
             value=collector()
-            event = make_metric_event(metric, value)
+            event = make_metric_event(metric, value, warning_level)
             logger.log(event)
-        time.sleep(5)
+
+        time.sleep(interval)
 
 
-def make_metric_event(metric, value):
-    level="INFO" if value <70 else "WARNING"
+def make_metric_event(metric, value, warning_level):
+    level="INFO" if value < warning_level else "WARNING"
     event={
         "level" : level,
         "event" : "metric_collected",

@@ -1,0 +1,6 @@
+{
+  "interval": 5,
+  "metrics": ["cpu_usage", "ram_usage", "disc_usage"],
+  "log_file": "log.json",
+  "warning_threshold": 70
+}

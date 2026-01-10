@@ -3,9 +3,9 @@ from datetime import datetime
 
 _file = None
 
-def init():
+def init(log_file):
     global _file
-    _file = open("log.json","a")
+    _file = open(log_file,"a")
 
 def log(event):
     if _file is None:
@@ -26,3 +26,4 @@ def get_datetime():
 def close():
     if _file:
         _file.close()
+        _file = None
