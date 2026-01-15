@@ -6,7 +6,7 @@ import logger
 
 
 
-def run(interval, active_metrics, warning_level):
+def run_loop(interval, active_metrics, warning_level):
     """
     timestamp = time of event generated in ISO 8601 + UTC
     level = level of urgency
@@ -16,13 +16,18 @@ def run(interval, active_metrics, warning_level):
     unit = %
     """
     while True:
-        for (metric, collector) in active_metrics.items():
-
-            value=collector()
-            event = make_metric_event(metric, value, warning_level)
-            logger.log(event)
+        
+        collect_and_log(active_metrics, warning_level)
 
         time.sleep(interval)
+
+
+def collect_and_log(active_metrics, warning_level):
+    for (metric, collector) in active_metrics.items():
+
+        value=collector()
+        event = make_metric_event(metric, value, warning_level)
+        logger.log(event)
 
 
 def make_metric_event(metric, value, warning_level):

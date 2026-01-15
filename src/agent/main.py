@@ -18,21 +18,28 @@ def load_config():
     interval = config["interval"]
     warning_threshold = config["warning_threshold"]
     log_filename = config["log_file"]
+    mode = config["mode"]
 
     active_metrics={}
     for (key, collector) in METRICS.items():
         if key in metrics:
             active_metrics[key]=collector
 
-    return interval, active_metrics, warning_threshold, log_filename
+    return mode, interval, active_metrics, warning_threshold, log_filename
 
 def main():
 
-    interval, active_metrics, warning_threshold, log_file = load_config()
+    mode, interval, active_metrics, warning_threshold, log_file = load_config()
 
     logger.init(log_file)
     try:
-        loop.run(interval, active_metrics, warning_threshold)
+        match mode:
+            case "once":
+                loop.collect_and_log(active_metrics, warning_threshold)
+            case "loop":
+                loop.run_loop(interval, active_metrics, warning_threshold)
+            case _:
+                raise ValueError("Wrong mode given!")
     except KeyboardInterrupt:
         pass
     finally:
