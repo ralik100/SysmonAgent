@@ -7,14 +7,9 @@ import logger
 
 
 def run_loop(interval, active_metrics, warning_level):
-    """
-    timestamp = time of event generated in ISO 8601 + UTC
-    level = level of urgency
-    event = type of event
-    metric = type of metric
-    value = integer number between 0 and 100
-    unit = %
-    """
+
+    loop_start = time.time()
+
     while True:
         
         collect_and_log(active_metrics, warning_level)
@@ -25,7 +20,12 @@ def run_loop(interval, active_metrics, warning_level):
 def collect_and_log(active_metrics, warning_level):
     for (metric, collector) in active_metrics.items():
 
-        value=collector()
+        try:
+            value=collector()
+        except Exception as error_exception:
+            event = make_error_event(error_exception, metric)
+            logger.log(event)
+            continue
         event = make_metric_event(metric, value, warning_level)
         logger.log(event)
 
@@ -38,5 +38,18 @@ def make_metric_event(metric, value, warning_level):
         "metric": metric,
         "value" : value,
         "unit"  : "%"
+    }
+    return event
+
+def make_error_event(error_exception, metric):
+    error_type = type(error_exception).__name__
+    error_message = str(error_exception)
+
+    event = {
+        "level"         : "ERROR",
+        "event"         : "collector_error",
+        "metric"        : metric,
+        "error_type"    : error_type,
+        "error_message" : error_message
     }
     return event
