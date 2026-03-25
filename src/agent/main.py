@@ -4,6 +4,7 @@ import json
 import cpu
 import disc
 import ram
+import threading
 
 METRICS={
     "cpu_usage" : cpu.get_cpu_usage,
@@ -29,22 +30,35 @@ def load_config():
 
 def main():
 
+    
+
     mode, interval, active_metrics, warning_threshold, log_file = load_config()
 
     logger.init(log_file)
+
+    global _logger_thread
+    _logger_thread = threading.Thread(target=logger.log)
+    _logger_thread.start()
     try:
         match mode:
             case "once":
                 loop.collect_and_log(active_metrics, warning_threshold)
             case "loop":
-                loop.run_loop(interval, active_metrics, warning_threshold)
+                global _loop_thread
+                _loop_thread = threading.Thread(target=loop.run_loop, args=(interval, active_metrics, warning_threshold,))
+                _loop_thread.start()
+                
             case _:
                 raise ValueError("Wrong mode given!")
     except KeyboardInterrupt:
-        pass
+        loop.end_loop()
     finally:
-        logger.close()
+        if mode == "loop":
+            loop.end_loop()
+            _loop_thread.join()
 
+        logger.close()
+        _logger_thread.join()
 
 if __name__ == "__main__":
     main()

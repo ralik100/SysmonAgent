@@ -4,17 +4,20 @@ import ram
 import time
 import logger
 
-
+end = False
 
 def run_loop(interval, active_metrics, warning_level):
 
-    loop_start = time.time()
-
     while True:
         
+        if end:
+            break
+
         collect_and_log(active_metrics, warning_level)
 
         time.sleep(interval)
+
+
 
 
 def collect_and_log(active_metrics, warning_level):
@@ -24,10 +27,10 @@ def collect_and_log(active_metrics, warning_level):
             value=collector()
         except Exception as error_exception:
             event = make_error_event(error_exception, metric)
-            logger.log(event)
+            logger.q.put(event)
             continue
         event = make_metric_event(metric, value, warning_level)
-        logger.log(event)
+        logger.q.put(event)
 
 
 def make_metric_event(metric, value, warning_level):
@@ -53,3 +56,8 @@ def make_error_event(error_exception, metric):
         "error_message" : error_message
     }
     return event
+
+def end_loop():
+
+    global end
+    end = True
