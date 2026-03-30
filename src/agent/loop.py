@@ -1,30 +1,43 @@
-import cpu
-import disc
-import ram
 import time
 import logger
 
-end = False
 
-def run_loop(interval, active_metrics, warning_level):
 
-    while True:
+timers = {
+    "cpu_usage" : time.time(),
+    "ram_usage" : time.time(),
+    "disc_usage": time.time()
+}
+
+
+
+def run_loop(intervals, active_metrics, warning_level, stop_event):
+    
+
+    while not stop_event.is_set():
         
-        if end:
-            break
 
-        collect_and_log(active_metrics, warning_level)
 
-        time.sleep(interval)
+        collect_and_log(intervals, active_metrics, warning_level)
 
+        stop_event.wait(0.1)
 
 
 
-def collect_and_log(active_metrics, warning_level):
+
+def collect_and_log(intervals,active_metrics, warning_level):
+
+    global timers
+
     for (metric, collector) in active_metrics.items():
 
         try:
-            value=collector()
+            current_time = time.time()
+            if current_time >= timers[metric]:
+                value=collector()
+                timers[metric] = timers[metric] + intervals[metric]
+            else:
+                continue
         except Exception as error_exception:
             event = make_error_event(error_exception, metric)
             logger.q.put(event)
@@ -56,8 +69,3 @@ def make_error_event(error_exception, metric):
         "error_message" : error_message
     }
     return event
-
-def end_loop():
-
-    global end
-    end = True

@@ -1,7 +1,8 @@
 {
   "mode" : "loop",
-  "interval": 5,
+  "intervals": {"cpu_usage" : 1, "ram_usage" : 5, "disc_usage" : 10}, 
   "metrics": ["cpu_usage", "ram_usage", "disc_usage"],
+  "heartbeat" : {"enabled" : true, "interval" : 15},
   "log_file": "log.json",
   "warning_threshold": 70
 }

@@ -11,6 +11,9 @@ def init(log_file):
     _file = open(log_file,"a")
 
 def log():
+
+    global _file
+
     while True:
         event = q.get()
 
