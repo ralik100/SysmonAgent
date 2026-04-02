@@ -34,13 +34,17 @@ def main():
 
     stop_event = threading.Event()
 
-    mode, intervals, active_metrics, warning_threshold, log_file, heartbeat_conf= load_config()
+    mode, intervals, active_metrics, warning_threshold, logger_config, heartbeat_conf= load_config()
 
     heartbeat_enabled = heartbeat_conf["enabled"]
 
+    log_file = logger_config["log_filename"]
+    batch_size = logger_config["batchsize"]
+    flush_interval = logger_config["flush_interval"]
+
     logger.init(log_file)
 
-    _logger_thread = threading.Thread(target=logger.log)
+    _logger_thread = threading.Thread(target=logger.log, args=(batch_size, flush_interval,))
     _logger_thread.start()
     try:
         match mode:

@@ -8,7 +8,7 @@ def start_heartbeat(stop_event, interval):
 
     while not stop_event.is_set():
 
-        logger.q.put(make_heartbeat_event())
+        logger.q.put(make_heartbeat_event(), timeout=1)
 
 
 

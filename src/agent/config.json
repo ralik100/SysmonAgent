@@ -3,6 +3,6 @@
   "intervals": {"cpu_usage" : 1, "ram_usage" : 5, "disc_usage" : 10}, 
   "metrics": ["cpu_usage", "ram_usage", "disc_usage"],
   "heartbeat" : {"enabled" : true, "interval" : 15},
-  "log_file": "log.json",
+  "logger" : {"batchsize" : 10, "flush_interval" : 2, "log_filename" : "log.json"},
   "warning_threshold": 70
 }

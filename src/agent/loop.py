@@ -40,10 +40,10 @@ def collect_and_log(intervals,active_metrics, warning_level):
                 continue
         except Exception as error_exception:
             event = make_error_event(error_exception, metric)
-            logger.q.put(event)
+            logger.q.put(event, timeout=1)
             continue
         event = make_metric_event(metric, value, warning_level)
-        logger.q.put(event)
+        logger.q.put(event, timeout=1)
 
 
 def make_metric_event(metric, value, warning_level):
