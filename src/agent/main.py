@@ -20,7 +20,7 @@ def load_config():
     intervals = config["intervals"]
     warning_threshold = config["warning_threshold"]
     heartbeat_conf = config["heartbeat"]
-    log_filename = config["log_file"]
+    logger_config = config["logger"]
     mode = config["mode"]
 
     active_metrics={}
@@ -28,7 +28,7 @@ def load_config():
         if key in metrics:
             active_metrics[key]=collector
 
-    return mode, intervals, active_metrics, warning_threshold, log_filename, heartbeat_conf
+    return mode, intervals, active_metrics, warning_threshold, logger_config, heartbeat_conf
 
 def main():
 
