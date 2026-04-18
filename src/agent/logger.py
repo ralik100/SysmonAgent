@@ -1,5 +1,7 @@
 import json
+from pathlib import Path
 import queue
+import time
 from datetime import datetime
 
 q = queue.Queue(maxsize=1000)
@@ -8,9 +10,10 @@ _file = None
 
 def init(log_file):
     global _file
-    _file = open(log_file,"a")
+    filepath=Path("/data/output/"+log_file)
+    _file = open(filepath,"a")
 
-def log(batch_size, flush_interval):
+def log(batch_size, flush_interval, statistics):
 
     global _file
 
@@ -37,6 +40,12 @@ def log(batch_size, flush_interval):
 
         batch.append(event)
         q.task_done()
+        statistics.record_event()
+
+        if event["level"] != "HEARTBEAT":
+            now = time.time()
+            lag = now - event["created_at"]
+            statistics.record_lag(lag)
 
         if len(batch) >= batch_size:
             write_batch(batch)

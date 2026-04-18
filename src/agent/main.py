@@ -6,6 +6,7 @@ import collectors.cpu
 import collectors.disc
 import collectors.ram
 import threading
+import stats
 
 METRICS={
     "cpu_usage" : collectors.cpu.get_cpu_usage,
@@ -32,6 +33,8 @@ def load_config():
 
 def main():
 
+    statistics=stats.Telemetry()
+
     stop_event = threading.Event()
 
     mode, intervals, active_metrics, warning_threshold, logger_config, heartbeat_conf= load_config()
@@ -44,19 +47,19 @@ def main():
 
     logger.init(log_file)
 
-    _logger_thread = threading.Thread(target=logger.log, args=(batch_size, flush_interval,))
+    _logger_thread = threading.Thread(target=logger.log, args=(batch_size, flush_interval, statistics,))
     _logger_thread.start()
     try:
         match mode:
             case "once":
                 loop.collect_and_log(active_metrics, warning_threshold)
             case "loop":
-                _loop_thread = threading.Thread(target=loop.run_loop, args=(intervals, active_metrics, warning_threshold, stop_event,))
+                _loop_thread = threading.Thread(target=loop.run_loop, args=(intervals, active_metrics, warning_threshold, stop_event, statistics,))
                 _loop_thread.start()
 
                 if heartbeat_enabled:
                     heartbeat_interval = heartbeat_conf["interval"]
-                    _heartbeat_thread = threading.Thread(target=heartbeat.start_heartbeat, args=(stop_event, heartbeat_interval,))
+                    _heartbeat_thread = threading.Thread(target=heartbeat.start_heartbeat, args=(stop_event, heartbeat_interval, statistics,))
                     _heartbeat_thread.start()
 
                 while _loop_thread.is_alive():
