@@ -1,6 +1,6 @@
 import time
 import logger
-
+import docker
 
 
 timers = {
@@ -24,7 +24,7 @@ def run_loop(intervals, active_metrics, warning_level, stop_event, statistics):
 
 
 
-
+"""
 def collect_and_log(intervals,active_metrics, warning_level, statistics):
 
     global timers
@@ -45,7 +45,12 @@ def collect_and_log(intervals,active_metrics, warning_level, statistics):
             continue
         event = make_metric_event(metric, value, warning_level)
         logger.q.put(event, timeout=1)
+"""
 
+def collect_and_log():
+
+
+    logger.q.put(event ,timeout=1)
 
 def make_metric_event(metric, value, warning_level):
     now = time.time()
@@ -74,3 +79,12 @@ def make_error_event(error_exception, metric):
         "created_at" : now 
     }
     return event
+
+
+def prepare_container_list(container_names):
+    docker_client=docker.from_env()
+    containers=docker_client.containers.list()
+    for cont in containers:
+        print(cont.name)
+    return containers
+prepare_container_list(["asd"])
