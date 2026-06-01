@@ -4,5 +4,6 @@
   "metrics": ["cpu_usage", "ram_usage", "disc_usage"],
   "heartbeat" : {"enabled" : true, "interval" : 15},
   "logger" : {"batchsize" : 10, "flush_interval" : 2, "log_filename" : "log.json"},
-  "warning_threshold": 70
+  "warning_threshold": 70,
+  "monitored_container_names": ["postgres"]
 }

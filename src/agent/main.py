@@ -23,13 +23,14 @@ def load_config():
     heartbeat_conf = config["heartbeat"]
     logger_config = config["logger"]
     mode = config["mode"]
+    container_names = config["monitored_container_names"]
 
     active_metrics={}
     for (key, collector) in METRICS.items():
         if key in metrics:
             active_metrics[key]=collector
 
-    return mode, intervals, active_metrics, warning_threshold, logger_config, heartbeat_conf
+    return mode, intervals, active_metrics, warning_threshold, logger_config, heartbeat_conf, container_names
 
 def main():
 
@@ -37,7 +38,7 @@ def main():
 
     stop_event = threading.Event()
 
-    mode, intervals, active_metrics, warning_threshold, logger_config, heartbeat_conf= load_config()
+    mode, intervals, active_metrics, warning_threshold, logger_config, heartbeat_conf, container_names = load_config()
 
     heartbeat_enabled = heartbeat_conf["enabled"]
 
@@ -54,7 +55,7 @@ def main():
             case "once":
                 loop.collect_and_log(active_metrics, warning_threshold)
             case "loop":
-                _loop_thread = threading.Thread(target=loop.run_loop, args=(intervals, active_metrics, warning_threshold, stop_event, statistics,))
+                _loop_thread = threading.Thread(target=loop.run_loop, args=(intervals, active_metrics, warning_threshold, stop_event, statistics, container_names,))
                 _loop_thread.start()
 
                 if heartbeat_enabled:

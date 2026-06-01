@@ -4,7 +4,7 @@ SOCKET_PATH = "/tmp/metrics.sock"
 
 client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
-print("CONNECTING...")
+print("CONNECTING TO SOCKET...")
 
 client.connect(SOCKET_PATH)
 

@@ -8,3 +8,10 @@ services:
 
     volumes:
       - /tmp/metrics.sock:/tmp/metrics.sock
+
+  postgres:
+    image: postgres:16-alpine
+
+
+  redis:
+    image: redis:alpine
