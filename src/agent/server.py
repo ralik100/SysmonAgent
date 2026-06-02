@@ -1,30 +1,30 @@
 import socket
 import os
 
+
+
+
 SOCKET_PATH = "/tmp/metrics.sock"
 
-if os.path.exists(SOCKET_PATH):
-    os.remove(SOCKET_PATH)
 
-server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+def open_connection():
 
-server.bind(SOCKET_PATH)
+    if os.path.exists(SOCKET_PATH):
+        os.remove(SOCKET_PATH)
 
-os.chmod(SOCKET_PATH, 0o777)
+    server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
-server.listen(1)
+    server.bind(SOCKET_PATH)
 
-print("SERVER STARTED")
-print("Waiting for connection...")
+    os.chmod(SOCKET_PATH, 0o777)
 
-conn, _ = server.accept()
+    server.listen(1)
 
-print("CLIENT CONNECTED")
+    print("SERVER STARTED")
+    print("Waiting for connection...")
 
-while True:
-    data = conn.recv(1024)
+    conn, _ = server.accept()
 
-    if not data:
-        break
+    print("CLIENT CONNECTED")
 
-    print(data.decode())
+    return conn

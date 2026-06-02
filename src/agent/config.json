@@ -1,7 +1,7 @@
 {
   "mode" : "loop",
-  "intervals": {"cpu_usage" : 1, "ram_usage" : 5, "disc_usage" : 10}, 
-  "metrics": ["cpu_usage", "ram_usage", "disc_usage"],
+  "intervals": {"container_stats" : 1}, 
+  "collectors": ["container_stats"],
   "heartbeat" : {"enabled" : true, "interval" : 15},
   "logger" : {"batchsize" : 10, "flush_interval" : 2, "log_filename" : "log.json"},
   "warning_threshold": 70,

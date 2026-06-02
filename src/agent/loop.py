@@ -1,25 +1,25 @@
 import time
 import logger
 import docker
-
+import collector
 
 timers = {}
 
 docker_client=docker.from_env()
 
 
-def run_loop(intervals, active_metrics, warning_level, stop_event, statistics, container_names):
+def run_loop(intervals, active_collectors, warning_level, stop_event, statistics, container_names, socket_client):
     
 
     monitored_containers = prepare_container_list(container_names)
 
-    declare_timers(monitored_containers)
+    declare_timers(active_collectors)
 
     while not stop_event.is_set():
         
 
 
-        collect_and_log(intervals, active_metrics, warning_level, statistics, monitored_containers)
+        collect_and_log(intervals, active_collectors, warning_level, statistics, monitored_containers, socket_client)
 
         stop_event.wait(0.1)
 
@@ -48,26 +48,27 @@ def collect_and_log(intervals,active_metrics, warning_level, statistics):
         logger.q.put(event, timeout=1)
 """
 
-def collect_and_log(statistics, container_names):
+def collect_and_log(intervals, active_collectors, statistics, containers, socket_client):
 
     global timers
 
-    for container in container_names:
+    for collector in active_collectors:
 
         try:
             current_time = time.time()
-            if current_time >= timers[metric]:
-                value=collector()
-                timers[metric] = timers[metric] + intervals[metric]
+            if current_time >= timers[collector]:
+                
+                timers[collector] = timers[collector] + intervals[collector]
             else:
                 continue
         except Exception as error_exception:
             statistics.record_error()
-            event = make_error_event(error_exception, metric)
+            event = make_error_event(error_exception, collector)
             logger.q.put(event, timeout=1)
             continue
-        event = make_metric_event(metric, value, warning_level)
-        logger.q.put(event, timeout=1)
+        for container in containers:
+            event = collector(container.name, socket_client)
+            logger.q.put(event, timeout=1)
 
 def make_metric_event(metric, value, warning_level):
     now = time.time()
@@ -82,7 +83,7 @@ def make_metric_event(metric, value, warning_level):
     }
     return event
 
-def make_error_event(error_exception, metric):
+def make_error_event(error_exception, container_name):
     error_type = type(error_exception).__name__
     error_message = str(error_exception)
     now = time.time()
@@ -90,7 +91,7 @@ def make_error_event(error_exception, metric):
     event = {
         "level"         : "ERROR",
         "event"         : "collector_error",
-        "metric"        : metric,
+        "container"        : container_name,
         "error_type"    : error_type,
         "error_message" : error_message,
         "created_at" : now 
@@ -110,9 +111,9 @@ def prepare_container_list(container_names):
             container_object_list.append(container)
     return container_object_list
 
-def declare_timers(containers):
+def declare_timers(collectors):
 
     global timers
 
-    for container in containers:
-        timers[container]=time.time()
+    for collector in collectors:
+        timers[collector]=time.time()

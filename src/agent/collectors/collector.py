@@ -1,10 +1,19 @@
-import subprocess
-import docker
+import json
 
 
+def get_container_stats(container_name, socket_client):
 
-def get_container_stats(container):
+    request = {
+        "action" : "get_stats",
+        "container" : container_name
+    }
 
-    stats = container.stats(stream=False)
+    message = json.dumps(request).encode() + b"\n"
 
-    return stats
+    socket_client.sendall(message)
+
+    response = socket_client.recv(4096)
+
+    data = json.loads(response.decode())
+
+    return data

@@ -2,22 +2,21 @@ import loop
 import logger
 import heartbeat
 import json
-import collectors.cpu
-import collectors.disc
-import collectors.ram
+import collectors.collector
 import threading
 import stats
+import socket
 
-METRICS={
-    "cpu_usage" : collectors.cpu.get_cpu_usage,
-    "ram_usage" : collectors.ram.get_ram_usage,
-    "disc_usage": collectors.disc.get_disc_usage
+COLLECTORS_MAP = {
+    "container_stats" : collectors.collector.get_container_stats,
 }
+
+SOCKET_PATH = "/tmp/metrics.sock"
 
 def load_config():
     with open("config.json","r") as f:
         config=json.load(f)
-    metrics = config["metrics"]
+    collectors = config["collectors"]
     intervals = config["intervals"]
     warning_threshold = config["warning_threshold"]
     heartbeat_conf = config["heartbeat"]
@@ -25,12 +24,27 @@ def load_config():
     mode = config["mode"]
     container_names = config["monitored_container_names"]
 
-    active_metrics={}
-    for (key, collector) in METRICS.items():
-        if key in metrics:
-            active_metrics[key]=collector
+    active_collectors={}
+    for (key, collector) in COLLECTORS_MAP.items():
+        if key in collectors:
+            active_collectors[key]=collector
 
-    return mode, intervals, active_metrics, warning_threshold, logger_config, heartbeat_conf, container_names
+    return mode, intervals, active_collectors, warning_threshold, logger_config, heartbeat_conf, container_names
+
+def connect_to_socket():
+    socket_client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+
+    print("CONNECTING TO SOCKET...")
+
+    socket_client.connect(SOCKET_PATH)
+
+    print("CONNECTED")
+    
+    return socket_client
+
+def disconnect_socket(socket_client):
+
+    socket_client.close()
 
 def main():
 
@@ -38,13 +52,15 @@ def main():
 
     stop_event = threading.Event()
 
-    mode, intervals, active_metrics, warning_threshold, logger_config, heartbeat_conf, container_names = load_config()
+    mode, intervals, active_collectors, warning_threshold, logger_config, heartbeat_conf, container_names = load_config()
 
     heartbeat_enabled = heartbeat_conf["enabled"]
 
     log_file = logger_config["log_filename"]
     batch_size = logger_config["batchsize"]
     flush_interval = logger_config["flush_interval"]
+
+    socket_client = connect_to_socket()
 
     logger.init(log_file)
 
@@ -53,9 +69,9 @@ def main():
     try:
         match mode:
             case "once":
-                loop.collect_and_log(active_metrics, warning_threshold)
+                loop.collect_and_log(active_collectors, warning_threshold)
             case "loop":
-                _loop_thread = threading.Thread(target=loop.run_loop, args=(intervals, active_metrics, warning_threshold, stop_event, statistics, container_names,))
+                _loop_thread = threading.Thread(target=loop.run_loop, args=(intervals, active_collectors, warning_threshold, stop_event, statistics, container_names, socket_client,))
                 _loop_thread.start()
 
                 if heartbeat_enabled:
@@ -77,6 +93,7 @@ def main():
         logger.q.join()
         logger.close()
         _logger_thread.join()
+        disconnect_socket(socket_client)
 
 if __name__ == "__main__":
     main()
