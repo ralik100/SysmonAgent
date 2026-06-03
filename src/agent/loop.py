@@ -1,17 +1,14 @@
 import time
 import logger
 import docker
-import collector
+import collectors.collector
 
 timers = {}
 
-docker_client=docker.from_env()
 
 
 def run_loop(intervals, active_collectors, warning_level, stop_event, statistics, container_names, socket_client):
     
-
-    monitored_containers = prepare_container_list(container_names)
 
     declare_timers(active_collectors)
 
@@ -19,7 +16,7 @@ def run_loop(intervals, active_collectors, warning_level, stop_event, statistics
         
 
 
-        collect_and_log(intervals, active_collectors, warning_level, statistics, monitored_containers, socket_client)
+        collect_and_log(intervals, active_collectors, statistics, container_names, socket_client)
 
         stop_event.wait(0.1)
 
@@ -48,11 +45,11 @@ def collect_and_log(intervals,active_metrics, warning_level, statistics):
         logger.q.put(event, timeout=1)
 """
 
-def collect_and_log(intervals, active_collectors, statistics, containers, socket_client):
+def collect_and_log(intervals, active_collectors, statistics, container_names, socket_client):
 
     global timers
 
-    for collector in active_collectors:
+    for key, collector in active_collectors.items():
 
         try:
             current_time = time.time()
@@ -66,8 +63,10 @@ def collect_and_log(intervals, active_collectors, statistics, containers, socket
             event = make_error_event(error_exception, collector)
             logger.q.put(event, timeout=1)
             continue
-        for container in containers:
-            event = collector(container.name, socket_client)
+        for container in container_names:
+            event = collector(container, socket_client)
+            print(event)
+            print(type(event))
             logger.q.put(event, timeout=1)
 
 def make_metric_event(metric, value, warning_level):
@@ -98,18 +97,6 @@ def make_error_event(error_exception, container_name):
     }
     return event
 
-
-def prepare_container_list(container_names):
-
-    global docker_client
-
-    container_object_list=[]
-
-    containers=docker_client.containers.list()
-    for container in containers:
-        if container.name in container_names:
-            container_object_list.append(container)
-    return container_object_list
 
 def declare_timers(collectors):
 

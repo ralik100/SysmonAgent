@@ -5,7 +5,7 @@ def get_container_stats(container_name, socket_client):
 
     request = {
         "action" : "get_stats",
-        "container" : container_name
+        "container_name" : container_name
     }
 
     message = json.dumps(request).encode() + b"\n"

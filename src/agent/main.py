@@ -8,7 +8,7 @@ import stats
 import socket
 
 COLLECTORS_MAP = {
-    "container_stats" : collectors.collector.get_container_stats,
+    "container_stats" : collectors.collector.get_container_stats
 }
 
 SOCKET_PATH = "/tmp/metrics.sock"

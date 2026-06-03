@@ -10,7 +10,9 @@ _file = None
 
 def init(log_file):
     global _file
-    filepath=Path("/data/output/"+log_file)
+    filepath=Path("/output") / log_file
+
+
     _file = open(filepath,"a")
 
 def log(batch_size, flush_interval, statistics):
