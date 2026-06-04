@@ -12,7 +12,6 @@ def run_loop(intervals, active_collectors, warning_level, stop_event, statistics
 
     declare_timers(active_collectors)
 
-    print(timers)
 
     while not stop_event.is_set():
         
@@ -55,9 +54,9 @@ def collect_and_log(intervals, active_collectors, statistics, container_names, s
 
         try:
             current_time = time.time()
-            if current_time >= timers[collector]:
+            if current_time >= timers[key]:
                 
-                timers[collector] = timers[collector] + intervals[collector]
+                timers[key] = timers[key] + intervals[key]
             else:
                 continue
         except Exception as error_exception:
@@ -67,8 +66,9 @@ def collect_and_log(intervals, active_collectors, statistics, container_names, s
             continue
         for container in container_names:
             event = collector(container, socket_client)
-            print(event)
-            print(type(event))
+
+            
+
             logger.q.put(event, timeout=1)
 
 def make_metric_event(metric, value, warning_level):
@@ -104,5 +104,20 @@ def declare_timers(collectors):
 
     global timers
 
-    for collector in collectors:
-        timers[collector]=time.time()
+    
+
+    for key, collector in collectors.items():
+
+        timers[key]=time.time()
+
+
+def filter_statistics(event):
+
+
+    filtered_event = {
+
+
+        
+    }
+
+    return filtered_event

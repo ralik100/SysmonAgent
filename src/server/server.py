@@ -9,11 +9,15 @@ SOCKET_PATH = "/tmp/socket/metrics.sock"
 
 def perform_request(request):
 
-    action = request[action]
-    container_name = request[container_name]
+    print(f"request : {request}")
+
+
+
+    command = request["action"]
+    container_name = request["container_name"]
     container = docker_client.containers.get(container_name)
 
-    match action:
+    match command:
         case "get_stats":
             stats = container.stats(stream=False)
             return stats
@@ -55,6 +59,7 @@ def handle_connections(server):
 
         data = json.loads(request.decode())
 
-        response = json.dumps(perform_request(request)).encode()
+
+        response = json.dumps(perform_request(data)).encode()
 
         conn.sendall(response)
