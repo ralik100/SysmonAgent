@@ -1,6 +1,6 @@
 {
   "mode" : "loop",
-  "intervals": {"container_stats" : 1}, 
+  "intervals": {"container_stats" : 5}, 
   "collectors": ["container_stats"],
   "heartbeat" : {"enabled" : true, "interval" : 15},
   "logger" : {"batchsize" : 10, "flush_interval" : 2, "log_filename" : "log.json"},

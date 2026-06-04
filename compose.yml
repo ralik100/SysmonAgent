@@ -7,8 +7,8 @@ services:
     image: ralik100/sysag:client_v1
 
     volumes:
-      - /tmp/metrics.sock:/tmp/metrics.sock
-      - ./output:/output
+      - /tmp/socket/metrics.sock:/tmp/socket/metrics.sock
+      - ./src/agent/output:/output
     
     depends_on:
       postgres:

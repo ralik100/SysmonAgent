@@ -12,6 +12,8 @@ def run_loop(intervals, active_collectors, warning_level, stop_event, statistics
 
     declare_timers(active_collectors)
 
+    print(timers)
+
     while not stop_event.is_set():
         
 
@@ -60,7 +62,7 @@ def collect_and_log(intervals, active_collectors, statistics, container_names, s
                 continue
         except Exception as error_exception:
             statistics.record_error()
-            event = make_error_event(error_exception, collector)
+            event = make_error_event(error_exception, key)
             logger.q.put(event, timeout=1)
             continue
         for container in container_names:
@@ -82,7 +84,7 @@ def make_metric_event(metric, value, warning_level):
     }
     return event
 
-def make_error_event(error_exception, container_name):
+def make_error_event(error_exception, collector_action):
     error_type = type(error_exception).__name__
     error_message = str(error_exception)
     now = time.time()
@@ -90,7 +92,7 @@ def make_error_event(error_exception, container_name):
     event = {
         "level"         : "ERROR",
         "event"         : "collector_error",
-        "container"        : container_name,
+        "action"        : collector_action,
         "error_type"    : error_type,
         "error_message" : error_message,
         "created_at" : now 

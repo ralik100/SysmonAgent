@@ -3,6 +3,7 @@ from pathlib import Path
 import queue
 import time
 from datetime import datetime
+import os
 
 q = queue.Queue(maxsize=1000)
 
@@ -10,6 +11,12 @@ _file = None
 
 def init(log_file):
     global _file
+    filepath=Path("/output")
+    try:
+        os.mkdir(filepath)
+        print("Path created successfully")
+    except FileExistsError:
+        print(f"{filepath} already exists")
     filepath=Path("/output") / log_file
 
 

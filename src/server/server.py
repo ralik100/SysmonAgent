@@ -5,7 +5,7 @@ import docker
 
 docker_client = docker.from_env()
 
-SOCKET_PATH = "/tmp/metrics.sock"
+SOCKET_PATH = "/tmp/socket/metrics.sock"
 
 def perform_request(request):
 

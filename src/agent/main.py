@@ -11,7 +11,7 @@ COLLECTORS_MAP = {
     "container_stats" : collectors.collector.get_container_stats
 }
 
-SOCKET_PATH = "/tmp/metrics.sock"
+SOCKET_PATH = "/tmp/socket/metrics.sock"
 
 def load_config():
     with open("config.json","r") as f:
