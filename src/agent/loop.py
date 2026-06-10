@@ -109,15 +109,3 @@ def declare_timers(collectors):
     for key, collector in collectors.items():
 
         timers[key]=time.time()
-
-
-def filter_statistics(event):
-
-
-    filtered_event = {
-
-
-        
-    }
-
-    return filtered_event

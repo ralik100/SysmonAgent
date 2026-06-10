@@ -51,6 +51,8 @@ def log(batch_size, flush_interval, statistics):
         q.task_done()
         statistics.record_event()
 
+
+        
         if event["level"] != "HEARTBEAT":
             now = time.time()
             lag = now - event["created_at"]
