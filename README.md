@@ -1,145 +1,146 @@
 # SysmonAgent
 
-## Overview
+## Przegląd
 
-SysmonAgent is a tool designed for safe Docker container monitoring. The system uses a client-server architecture to separate monitoring logic from host-level resource access.
+SysmonAgent jest narzędziem przeznaczonym do bezpiecznego monitorowania kontenerów Docker. System wykorzystuje architekturę klient-serwer w celu oddzielenia logiki monitorowania od dostępu do zasobów hosta.
 
-The monitoring agent runs inside a Docker container and communicates with a server running on the host through a UNIX socket. The host-side server is responsible for collecting container metrics using the Docker SDK, filtering the collected data, and returning only the required information to the monitoring agent.
+Agent monitorujący działa wewnątrz kontenera Docker i komunikuje się z serwerem uruchomionym na hoście za pomocą gniazda UNIX. Serwer działający po stronie hosta odpowiada za zbieranie metryk kontenerów przy użyciu Docker SDK, filtrowanie zebranych danych oraz zwracanie wyłącznie wymaganych informacji do agenta monitorującego.
 
-### Architecture
+### Architektura
 
 ```text
 +----------------------+
-| Monitoring Container |
+| Kontener Monitorujący |
 +----------+-----------+
            |
-           | UNIX Socket
+           | Gniazdo UNIX
            |
 +----------v-----------+
-| Host Server          |
+| Serwer Hosta         |
 | Docker SDK           |
 +----------+-----------+
            |
            | Docker API
            |
 +----------v-----------+
-| Monitored Containers |
+| Monitorowane         |
+| Kontenery            |
 +----------------------+
 ```
 
-### Advantages
+### Zalety
 
-* The monitoring container has no direct access to the Docker daemon.
-* The monitoring container does not require access to `/var/run/docker.sock`.
-* Container statistics are collected through a dedicated host-side service.
-* Communication between components is isolated through a UNIX socket.
-* Monitoring logic, data collection, and logging are separated into independent modules.
-* New collectors can be added through configuration without modifying the core application logic.
+* Kontener monitorujący nie posiada bezpośredniego dostępu do demona Docker.
+* Kontener monitorujący nie wymaga dostępu do `/var/run/docker.sock`.
+* Statystyki kontenerów są zbierane przez dedykowaną usługę działającą po stronie hosta.
+* Komunikacja pomiędzy komponentami jest izolowana przy użyciu gniazda UNIX.
+* Logika monitorowania, zbieranie danych oraz logowanie są rozdzielone na niezależne moduły.
+* Nowe kolektory mogą być dodawane poprzez konfigurację bez modyfikowania głównej logiki aplikacji.
 
-The system currently collects metrics such as CPU usage, memory usage, and network statistics from monitored containers and stores them in a unified JSON event format for further processing and analysis.
-
----
-
-## Features
-
-* Docker container monitoring
-* Client-server architecture
-* UNIX socket communication
-* Docker SDK integration
-* JSON event logging
-* Configurable collectors
-* Configurable monitoring intervals
-* Configurable logging
-* Host isolation from monitoring container
-* Lightweight deployment using Docker Compose
+System obecnie zbiera metryki takie jak wykorzystanie procesora, wykorzystanie pamięci oraz statystyki sieciowe z monitorowanych kontenerów i zapisuje je w ujednoliconym formacie zdarzeń JSON do dalszego przetwarzania i analizy.
 
 ---
 
-## Requirements
+## Funkcjonalności
+
+* Monitorowanie kontenerów Docker
+* Architektura klient-serwer
+* Komunikacja przez gniazdo UNIX
+* Integracja z Docker SDK
+* Logowanie zdarzeń w formacie JSON
+* Konfigurowalne kolektory
+* Konfigurowalne interwały monitorowania
+* Konfigurowalne logowanie
+* Izolacja hosta od kontenera monitorującego
+* Lekkie wdrożenie przy użyciu Docker Compose
+
+---
+
+## Wymagania
 
 * Windows 11
 * WSL2
-* Ubuntu (WSL distribution)
+* Ubuntu (dystrybucja WSL)
 * Python 3
 * Python virtual environment (venv)
 * Docker Desktop
 
 ---
 
-## Installation
+## Instalacja
 
-### 1. Clone Repository
+### 1. Sklonowanie repozytorium
 
 ```bash
 git clone https://github.com/ralik100/SysmonAgent.git
 cd SysmonAgent
 ```
 
-### 2. Install WSL and Ubuntu
+### 2. Instalacja WSL i Ubuntu
 
-Run PowerShell as Administrator:
+Uruchom PowerShell jako Administrator:
 
 ```powershell
 wsl --install
 ```
 
-Install Ubuntu:
+Zainstaluj Ubuntu:
 
 ```powershell
 wsl --install -d Ubuntu
 ```
 
-Verify installation:
+Zweryfikuj instalację:
 
 ```powershell
 wsl -l -v
 ```
 
-### 3. Enter Ubuntu
+### 3. Uruchom Ubuntu
 
 ```bash
 wsl -d Ubuntu -u root
 ```
 
-### 4. Install Python, pip and venv
+### 4. Instalacja Python, pip oraz venv
 
 ```bash
 apt update
 apt install -y python3 python3-pip python3-venv
 ```
 
-Verify installation:
+Zweryfikuj instalację:
 
 ```bash
 python3 --version
 pip3 --version
 ```
 
-### 5. Create Python Virtual Environment
+### 5. Utworzenie środowiska wirtualnego Python
 
-From the project directory:
+W katalogu projektu:
 
 ```bash
 python3 -m venv .venv
 ```
 
-Activate the virtual environment:
+Aktywuj środowisko wirtualne:
 
 ```bash
 source .venv/bin/activate
 ```
 
-Install Python dependencies:
+Zainstaluj zależności:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 6. Install Docker Desktop
+### 6. Instalacja Docker Desktop
 
-Install Docker Desktop for Windows and enable WSL integration.
+Zainstaluj Docker Desktop dla systemu Windows i włącz integrację z WSL.
 
-Verify Docker access from WSL:
+Zweryfikuj dostęp do Dockera z poziomu WSL:
 
 ```bash
 docker --version
@@ -148,11 +149,11 @@ docker compose version
 
 ---
 
-## Configuration
+## Konfiguracja
 
-Application configuration is stored in `config.json`.
+Konfiguracja aplikacji znajduje się w pliku `config.json`.
 
-Example:
+Przykład:
 
 ```json
 {
@@ -181,26 +182,26 @@ Example:
 
 ---
 
-## Running SysmonAgent
+## Uruchamianie SysmonAgent
 
-### Automatic Startup
+### Automatyczne uruchamianie
 
-The easiest way to start the application is:
+Najprostszym sposobem uruchomienia aplikacji jest:
 
 ```cmd
 start.bat
 ```
 
-### Manual Startup
+### Ręczne uruchamianie
 
-Start the host-side server:
+Uruchom serwer po stronie hosta:
 
 ```bash
 source .venv/bin/activate
 python3 src/server/main.py
 ```
 
-In a separate terminal start the monitoring container:
+W osobnym terminalu uruchom kontener monitorujący:
 
 ```bash
 docker compose up --build
@@ -208,7 +209,7 @@ docker compose up --build
 
 ---
 
-## Example Event
+## Przykładowe zdarzenie
 
 ```json
 {
@@ -228,14 +229,14 @@ docker compose up --build
 
 ---
 
-## Notes
+## Uwagi
 
-> `start.bat` assumes the default project directory structure.
+> `start.bat` zakłada domyślną strukturę katalogów projektu.
 >
-> If the file is moved to another location, paths inside the script may need to be updated accordingly.
+> Jeśli plik zostanie przeniesiony w inne miejsce, ścieżki wewnątrz skryptu mogą wymagać aktualizacji.
 
-> Docker Desktop must be running before starting SysmonAgent.
+> Docker Desktop musi być uruchomiony przed startem SysmonAgent.
 
-> WSL integration must be enabled in Docker Desktop settings.
+> Integracja WSL musi być włączona w ustawieniach Docker Desktop.
 
-> For further information look into documentation stored in /docs.
+> Więcej informacji znajduje się w dokumentacji przechowywanej w katalogu `/docs`.

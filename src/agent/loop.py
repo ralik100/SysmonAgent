@@ -1,21 +1,24 @@
 """
-SysmonAgent Monitoring Loop Module
+Moduł pętli monitorowania SysmonAgent
 
-Responsible for scheduling and executing collectors according
-to user-defined intervals.
+Odpowiada za planowanie oraz wykonywanie kolektorów zgodnie
+z interwałami zdefiniowanymi przez użytkownika.
 
-The module maintains a lightweight timer mechanism that tracks
-when each collector should be executed. Collected events are
-forwarded to the logger queue for asynchronous persistence.
+Moduł utrzymuje lekki mechanizm timerów, który śledzi moment,
+w którym każdy kolektor powinien zostać uruchomiony.
+Zebrane zdarzenia są przekazywane do kolejki loggera
+w celu asynchronicznego zapisania.
 """
 
 import time
 import logger
 
 
-# Stores next execution timestamps for individual collectors.
-# Key: collector name
-# Value: next scheduled execution time (UNIX timestamp)
+# Przechowuje znaczniki czasu kolejnego uruchomienia
+# poszczególnych kolektorów.
+#
+# Klucz: nazwa kolektora
+# Wartość: czas kolejnego uruchomienia (znacznik UNIX)
 timers = {}
 
 
@@ -29,36 +32,39 @@ def run_loop(
     socket_client
 ):
     """
-    Starts the main monitoring loop.
+    Uruchamia główną pętlę monitorowania.
 
-    The loop initializes collector timers and continuously checks
-    whether any collector should be executed according to its
-    configured interval.
+    Pętla inicjalizuje timery kolektorów i nieprzerwanie
+    sprawdza, czy którykolwiek z nich powinien zostać
+    wykonany zgodnie ze skonfigurowanym interwałem.
 
-    Execution continues until the stop event is signaled.
+    Działanie trwa do momentu ustawienia sygnału zatrzymania.
 
-    Args:
+    Argumenty:
         intervals (dict):
-            Collector execution intervals in seconds.
+            Interwały wykonywania kolektorów wyrażone
+            w sekundach.
 
         active_collectors (dict):
-            Mapping of collector names to collector functions.
+            Mapowanie nazw kolektorów na funkcje kolektorów.
 
         warning_level (int):
-            Threshold used by warning-generating events.
+            Próg wykorzystywany przez zdarzenia ostrzegawcze.
 
         stop_event (threading.Event):
-            Synchronization object used to stop monitoring.
+            Obiekt synchronizacyjny wykorzystywany
+            do zatrzymania monitorowania.
 
         statistics:
-            Statistics collector used for runtime metrics.
+            Obiekt statystyk wykorzystywany do gromadzenia
+            metryk działania aplikacji.
 
         container_names (list[str]):
-            List of monitored container names.
+            Lista nazw monitorowanych kontenerów.
 
         socket_client (socket.socket):
-            Connected UNIX socket client used for communication
-            with the host-side server.
+            Połączony klient gniazda UNIX wykorzystywany
+            do komunikacji z serwerem działającym po stronie hosta.
     """
 
     declare_timers(active_collectors)
@@ -73,7 +79,8 @@ def run_loop(
             socket_client
         )
 
-        # Prevents busy-waiting and excessive CPU consumption.
+        # Zapobiega aktywnemu oczekiwaniu (busy-waiting)
+        # oraz nadmiernemu wykorzystaniu procesora.
         stop_event.wait(0.1)
 
 
@@ -85,32 +92,32 @@ def collect_and_log(
     socket_client
 ):
     """
-    Executes scheduled collectors and forwards generated
-    events to the logger queue.
+    Uruchamia zaplanowane kolektory i przekazuje wygenerowane
+    zdarzenia do kolejki loggera.
 
-    For each collector, the function verifies whether the
-    configured execution interval has elapsed. If execution
-    is required, the collector is invoked for every monitored
-    container.
+    Dla każdego kolektora funkcja sprawdza, czy upłynął
+    skonfigurowany interwał wykonania. Jeżeli tak,
+    kolektor zostaje uruchomiony dla każdego monitorowanego
+    kontenera.
 
-    Collector failures are converted into standardized error
-    events and forwarded to the logger.
+    Błędy kolektorów są konwertowane na ustandaryzowane
+    zdarzenia błędów i przekazywane do loggera.
 
-    Args:
+    Argumenty:
         intervals (dict):
-            Collector execution intervals.
+            Interwały wykonywania kolektorów.
 
         active_collectors (dict):
-            Registered collector functions.
+            Zarejestrowane funkcje kolektorów.
 
         statistics:
-            Runtime statistics collector.
+            Obiekt przechowujący statystyki działania aplikacji.
 
         container_names (list[str]):
-            Containers selected for monitoring.
+            Kontenery wybrane do monitorowania.
 
         socket_client (socket.socket):
-            Connected UNIX socket client.
+            Połączony klient gniazda UNIX.
     """
 
     global timers
@@ -149,24 +156,24 @@ def collect_and_log(
 
 def make_metric_event(metric, value, warning_level):
     """
-    Creates a standardized metric event.
+    Tworzy ustandaryzowane zdarzenie metryki.
 
-    The event severity level is automatically determined
-    based on the configured warning threshold.
+    Poziom ważności zdarzenia jest określany automatycznie
+    na podstawie skonfigurowanego progu ostrzegawczego.
 
-    Args:
+    Argumenty:
         metric (str):
-            Metric identifier.
+            Identyfikator metryki.
 
         value (float | int):
-            Measured metric value.
+            Zmierzona wartość metryki.
 
         warning_level (int):
-            Warning threshold percentage.
+            Próg ostrzegawczy wyrażony w procentach.
 
-    Returns:
+    Zwraca:
         dict:
-            Formatted metric event.
+            Sformatowane zdarzenie metryki.
     """
 
     now = time.time()
@@ -191,21 +198,21 @@ def make_metric_event(metric, value, warning_level):
 
 def make_error_event(error_exception, collector_action):
     """
-    Creates a standardized collector error event.
+    Tworzy ustandaryzowane zdarzenie błędu kolektora.
 
-    Error events are generated whenever a collector fails
-    during execution.
+    Zdarzenia błędów są generowane zawsze wtedy,
+    gdy kolektor napotka wyjątek podczas wykonywania.
 
-    Args:
+    Argumenty:
         error_exception (Exception):
-            Captured exception instance.
+            Przechwycony obiekt wyjątku.
 
         collector_action (str):
-            Collector identifier associated with the failure.
+            Identyfikator kolektora powiązanego z błędem.
 
-    Returns:
+    Zwraca:
         dict:
-            Formatted error event.
+            Sformatowane zdarzenie błędu.
     """
 
     error_type = type(error_exception).__name__
@@ -227,15 +234,16 @@ def make_error_event(error_exception, collector_action):
 
 def declare_timers(collectors):
     """
-    Initializes execution timers for all active collectors.
+    Inicjalizuje timery wykonywania wszystkich aktywnych
+    kolektorów.
 
-    Each collector receives an initial execution timestamp
-    equal to the current system time, allowing immediate
-    execution after startup.
+    Każdy kolektor otrzymuje początkowy znacznik czasu
+    równy aktualnemu czasowi systemowemu, co pozwala
+    na jego natychmiastowe uruchomienie po starcie aplikacji.
 
-    Args:
+    Argumenty:
         collectors (dict):
-            Registered collector mapping.
+            Mapowanie zarejestrowanych kolektorów.
     """
 
     global timers

@@ -1,11 +1,12 @@
 """
-SysmonAgent Heartbeat Module
+Moduł Heartbeat SysmonAgent
 
-Responsible for generating periodic heartbeat events describing
-the internal state of the monitoring application.
+Odpowiada za generowanie cyklicznych zdarzeń heartbeat opisujących
+wewnętrzny stan aplikacji monitorującej.
 
-Heartbeat events provide operational metrics such as queue
-utilization, event processing statistics and error counters.
+Zdarzenia heartbeat dostarczają metryk operacyjnych, takich jak
+wykorzystanie kolejki, statystyki przetwarzania zdarzeń
+oraz liczniki błędów.
 """
 
 import logger
@@ -13,33 +14,36 @@ import logger
 
 def start_heartbeat(stop_event, interval, statistics):
     """
-    Starts the heartbeat loop.
+    Uruchamia pętlę generowania zdarzeń heartbeat.
 
-    The function periodically generates heartbeat events using
-    the provided statistics object and places them into the
-    logger queue for persistence.
+    Funkcja cyklicznie tworzy zdarzenia heartbeat na podstawie
+    danych dostarczanych przez obiekt statystyk, a następnie
+    umieszcza je w kolejce loggera w celu zapisania do logów.
 
-    Execution continues until the stop event is signaled.
+    Działanie funkcji trwa do momentu ustawienia sygnału zatrzymania.
 
-    Args:
+    Argumenty:
         stop_event (threading.Event):
-            Synchronization object used to stop the heartbeat loop.
+            Obiekt synchronizacyjny wykorzystywany do zatrzymania
+            pętli heartbeat.
 
         interval (int | float):
-            Time between heartbeat events in seconds.
+            Czas pomiędzy kolejnymi zdarzeniami heartbeat,
+            wyrażony w sekundach.
 
         statistics:
-            Statistics provider responsible for generating
-            heartbeat snapshots.
+            Obiekt odpowiedzialny za generowanie migawek
+            statystyk wykorzystywanych w zdarzeniach heartbeat.
 
-    Returns:
+    Zwraca:
         dict:
-            Last generated heartbeat event before shutdown.
+            Ostatnie wygenerowane zdarzenie heartbeat
+            przed zakończeniem działania funkcji.
 
-    Notes:
-        Heartbeat events contain information about application
-        health, logger queue utilization, throughput and
-        accumulated errors.
+    Uwagi:
+        Zdarzenia heartbeat zawierają informacje o stanie
+        aplikacji, wykorzystaniu kolejki loggera, przepustowości
+        przetwarzania zdarzeń oraz liczbie zgromadzonych błędów.
     """
 
     while not stop_event.is_set():
@@ -54,4 +58,3 @@ def start_heartbeat(stop_event, interval, statistics):
         stop_event.wait(interval)
 
     return event
-

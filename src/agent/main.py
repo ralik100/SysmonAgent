@@ -1,19 +1,19 @@
 """
-SysmonAgent Agent Entry Point
+SysmonAgent – Główny punkt wejścia agenta monitorującego
 
-This module is responsible for application startup and lifecycle
-management.
+Moduł odpowiada za uruchamianie aplikacji oraz zarządzanie jej
+cyklem życia.
 
-The agent performs the following tasks:
+Agent wykonuje następujące zadania:
 
-1. Loads configuration from config.json.
-2. Establishes a connection with the host-side server.
-3. Initializes the logging subsystem.
-4. Starts monitoring and heartbeat threads.
-5. Coordinates graceful shutdown of all components.
+1. Wczytuje konfigurację z pliku config.json.
+2. Nawiązuje połączenie z serwerem działającym po stronie hosta.
+3. Inicjalizuje system logowania.
+4. Uruchamia wątki monitorowania oraz heartbeat.
+5. Koordynuje poprawne zamykanie wszystkich komponentów.
 
-The module serves as the central orchestration point for the
-monitoring client running inside the Docker container.
+Moduł pełni rolę centralnego punktu orkiestracji dla klienta
+monitorującego uruchamianego wewnątrz kontenera Docker.
 """
 
 import loop
@@ -26,26 +26,27 @@ import stats
 import socket
 
 
-# Maps collector identifiers from configuration files
-# to their implementation functions.
+# Mapowanie identyfikatorów kolektorów z pliku konfiguracji
+# na odpowiadające im funkcje implementacyjne.
 COLLECTORS_MAP = {
     "container_stats": collectors.collector.get_container_stats
 }
 
 
-# UNIX socket used for communication with the host server.
+# Ścieżka do gniazda UNIX wykorzystywanego do komunikacji
+# z serwerem działającym po stronie hosta.
 SOCKET_PATH = "/tmp/socket/metrics.sock"
 
 
 def load_config():
     """
-    Loads application configuration from config.json.
+    Wczytuje konfigurację aplikacji z pliku config.json.
 
-    The function parses configuration values and creates
-    a dictionary containing only collectors enabled by
-    the user.
+    Funkcja odczytuje wszystkie parametry konfiguracyjne oraz
+    tworzy słownik zawierający wyłącznie kolektory aktywowane
+    przez użytkownika.
 
-    Returns:
+    Zwraca:
         tuple:
             mode (str)
             intervals (dict)
@@ -55,12 +56,12 @@ def load_config():
             heartbeat_conf (dict)
             container_names (list[str])
 
-    Raises:
+    Wyjątki:
         FileNotFoundError:
-            If config.json does not exist.
+            Jeśli plik config.json nie istnieje.
 
         json.JSONDecodeError:
-            If the configuration file contains invalid JSON.
+            Jeśli plik konfiguracji zawiera niepoprawny JSON.
     """
 
     with open("config.json", "r") as f:
@@ -93,15 +94,16 @@ def load_config():
 
 def connect_to_socket():
     """
-    Establishes connection to the host-side UNIX socket server.
+    Nawiązuje połączenie z serwerem wykorzystującym gniazdo UNIX.
 
-    Returns:
+    Zwraca:
         socket.socket:
-            Connected UNIX socket client.
+            Połączony klient gniazda UNIX.
 
-    Raises:
+    Wyjątki:
         OSError:
-            If the socket cannot be reached or connection fails.
+            Jeśli połączenie z gniazdem nie może zostać
+            nawiązane lub serwer jest niedostępny.
     """
 
     socket_client = socket.socket(
@@ -120,11 +122,11 @@ def connect_to_socket():
 
 def disconnect_socket(socket_client):
     """
-    Closes an active UNIX socket connection.
+    Zamyka aktywne połączenie z gniazdem UNIX.
 
-    Args:
+    Argumenty:
         socket_client (socket.socket):
-            Connected socket instance.
+            Instancja połączonego gniazda.
     """
 
     socket_client.close()
@@ -132,32 +134,32 @@ def disconnect_socket(socket_client):
 
 def main():
     """
-    Main application entry point.
+    Główny punkt wejścia aplikacji.
 
-    Initializes all required subsystems and starts the
-    monitoring workflow according to the selected mode.
+    Inicjalizuje wszystkie wymagane podsystemy oraz uruchamia
+    proces monitorowania zgodnie z wybranym trybem pracy.
 
-    Startup sequence:
+    Sekwencja uruchamiania:
 
-    1. Create telemetry collector.
-    2. Create stop event for thread synchronization.
-    3. Load configuration.
-    4. Connect to host server.
-    5. Initialize logger.
-    6. Start logger thread.
-    7. Start monitoring loop.
-    8. Optionally start heartbeat thread.
+    1. Utworzenie obiektu telemetrycznego.
+    2. Utworzenie zdarzenia synchronizacyjnego stop_event.
+    3. Wczytanie konfiguracji.
+    4. Nawiązanie połączenia z serwerem hosta.
+    5. Inicjalizacja loggera.
+    6. Uruchomienie wątku loggera.
+    7. Uruchomienie pętli monitorującej.
+    8. Opcjonalne uruchomienie wątku heartbeat.
 
-    Shutdown sequence:
+    Sekwencja zamykania:
 
-    1. Stop monitoring threads.
-    2. Wait for event queue to be flushed.
-    3. Stop logger thread.
-    4. Close socket connection.
+    1. Zatrzymanie wątków monitorujących.
+    2. Oczekiwanie na opróżnienie kolejki zdarzeń.
+    3. Zatrzymanie wątku loggera.
+    4. Zamknięcie połączenia z gniazdem UNIX.
 
-    Raises:
+    Wyjątki:
         ValueError:
-            If an unsupported execution mode is configured.
+            Jeśli skonfigurowano nieobsługiwany tryb działania.
     """
 
     statistics = stats.Telemetry()
@@ -184,8 +186,8 @@ def main():
 
     logger.init(log_file)
 
-    # Dedicated thread responsible for asynchronous
-    # event persistence.
+    # Dedykowany wątek odpowiedzialny za asynchroniczny
+    # zapis zdarzeń do pliku.
     _logger_thread = threading.Thread(
         target=logger.log,
         args=(
@@ -203,7 +205,8 @@ def main():
 
             case "once":
 
-                # Execute enabled collectors once and exit.
+                # Jednorazowe wykonanie aktywnych kolektorów
+                # i zakończenie działania aplikacji.
                 loop.collect_and_log(
                     active_collectors,
                     warning_threshold
@@ -211,7 +214,7 @@ def main():
 
             case "loop":
 
-                # Start continuous monitoring loop.
+                # Uruchomienie ciągłej pętli monitorowania.
                 _loop_thread = threading.Thread(
                     target=loop.run_loop,
                     args=(
@@ -227,7 +230,7 @@ def main():
 
                 _loop_thread.start()
 
-                # Optional heartbeat subsystem.
+                # Opcjonalne uruchomienie mechanizmu heartbeat.
                 if heartbeat_enabled:
 
                     heartbeat_interval = heartbeat_conf["interval"]
@@ -251,7 +254,8 @@ def main():
 
     except KeyboardInterrupt:
 
-        # Graceful shutdown initiated by the user.
+        # Poprawne zamknięcie aplikacji po przerwaniu
+        # działania przez użytkownika.
         if mode == "loop":
 
             stop_event.set()
@@ -263,7 +267,8 @@ def main():
 
     finally:
 
-        # Wait until all queued events have been written.
+        # Oczekiwanie na zapis wszystkich zdarzeń znajdujących
+        # się jeszcze w kolejce loggera.
         logger.q.join()
 
         logger.close()

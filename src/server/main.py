@@ -1,38 +1,38 @@
 """
-SysmonAgent Server Entry Point
+Punkt wejściowy serwera SysmonAgent
 
-This module serves as the entry point for the host-side server.
+Moduł pełni rolę punktu startowego dla serwera działającego
+po stronie hosta.
 
-The server is responsible for:
+Serwer odpowiada za:
 
-- creating a UNIX socket,
-- accepting client connections,
-- handling incoming monitoring requests,
-- collecting Docker statistics through Docker SDK,
-- returning filtered metrics to monitoring agents.
+- utworzenie gniazda UNIX Socket,
+- akceptowanie połączeń od klientów,
+- obsługę przychodzących żądań monitorujących,
+- pobieranie statystyk Dockera za pomocą Docker SDK,
+- zwracanie przefiltrowanych metryk do agentów monitorujących.
 
-All low-level server functionality is implemented in
-server.py. This module only initializes the server
-lifecycle.
+Cała niskopoziomowa logika serwera została zaimplementowana
+w module server.py. Ten moduł odpowiada jedynie za
+inicjalizację i zarządzanie cyklem życia serwera.
 """
 
 import server
 
 
-
 def main():
     """
-    Starts the SysmonAgent host server.
+    Uruchamia serwer SysmonAgent działający po stronie hosta.
 
-    Execution flow:
+    Przebieg działania:
 
-    1. Create and initialize UNIX socket server.
-    2. Start accepting client connections.
-    3. Process incoming monitoring requests.
-    4. Gracefully close the server on shutdown.
+    1. Tworzy i inicjalizuje serwer UNIX Socket.
+    2. Rozpoczyna nasłuchiwanie połączeń klientów.
+    3. Obsługuje przychodzące żądania monitorujące.
+    4. Poprawnie zamyka serwer podczas zakończenia pracy.
 
-    The function delegates all networking operations
-    to the server module.
+    Funkcja deleguje wszystkie operacje sieciowe
+    do modułu server.
     """
 
     client = server.start_server()

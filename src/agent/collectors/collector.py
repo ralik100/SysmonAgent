@@ -1,11 +1,11 @@
 """
-SysmonAgent Collector Module
+Moduł kolektora SysmonAgent
 
-Provides collector functions responsible for requesting
-monitoring data from the host-side server.
+Udostępnia funkcje kolektorów odpowiedzialne za pobieranie
+danych monitorujących z serwera działającego po stronie hosta.
 
-Collectors communicate with the server through a UNIX socket
-and return parsed monitoring data to the monitoring client.
+Kolektory komunikują się z serwerem za pomocą gniazda UNIX
+i zwracają przetworzone dane monitorujące do klienta monitoringu.
 """
 
 import json
@@ -13,30 +13,31 @@ import json
 
 def get_container_stats(container_name, socket_client):
     """
-    Requests filtered Docker container statistics from the host server.
+    Pobiera przefiltrowane statystyki kontenera Docker z serwera hosta.
 
-    The function creates a JSON request containing the requested
-    action and target container name, sends it through the UNIX
-    socket connection and returns the parsed JSON response.
+    Funkcja tworzy żądanie JSON zawierające nazwę wykonywanej
+    akcji oraz nazwę monitorowanego kontenera, wysyła je przez
+    połączenie UNIX Socket, a następnie zwraca sparsowaną
+    odpowiedź otrzymaną od serwera.
 
-    Args:
+    Argumenty:
         container_name (str):
-            Name of the monitored Docker container.
+            Nazwa monitorowanego kontenera Docker.
 
         socket_client (socket.socket):
-            Connected UNIX socket client used for communication
-            with the host-side server.
+            Połączony klient gniazda UNIX wykorzystywany
+            do komunikacji z serwerem działającym po stronie hosta.
 
-    Returns:
+    Zwraca:
         dict:
-            Filtered container statistics returned by the server.
+            Przefiltrowane statystyki kontenera zwrócone przez serwer.
 
-    Raises:
+    Wyjątki:
         OSError:
-            If socket communication fails.
+            Występuje w przypadku błędu komunikacji przez gniazdo.
 
         json.JSONDecodeError:
-            If the server response contains invalid JSON data.
+            Występuje, gdy odpowiedź serwera zawiera niepoprawne dane JSON.
     """
 
     request = {
@@ -53,4 +54,3 @@ def get_container_stats(container_name, socket_client):
     data = json.loads(response.decode())
 
     return data
-

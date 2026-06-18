@@ -1,24 +1,25 @@
 """
-SysmonAgent Host Server Module
+Moduł Serwera Hosta SysmonAgent
 
-This module provides a secure interface between monitoring
-agents and Docker Engine.
+Moduł udostępnia bezpieczny interfejs pomiędzy agentami
+monitorującymi a Docker Engine.
 
-The server exposes a UNIX socket used by monitoring clients
-running inside Docker containers. Instead of granting direct
-access to Docker Engine, all requests are validated and
-processed by this dedicated service.
+Serwer udostępnia gniazdo UNIX Socket wykorzystywane przez
+klientów monitorujących działających wewnątrz kontenerów Docker.
+Zamiast przyznawać bezpośredni dostęp do Docker Engine,
+wszystkie żądania są walidowane i obsługiwane przez
+dedykowaną usługę działającą po stronie hosta.
 
-Responsibilities:
+Odpowiedzialności modułu:
 
-- receive monitoring requests,
-- communicate with Docker SDK,
-- collect container statistics,
-- filter raw Docker metrics,
-- return normalized monitoring events.
+- odbieranie żądań monitorujących,
+- komunikacja z Docker SDK,
+- pobieranie statystyk kontenerów,
+- filtrowanie surowych metryk Dockera,
+- zwracanie ujednoliconych zdarzeń monitorujących.
 
-This architecture prevents monitoring containers from
-accessing Docker daemon resources directly.
+Takie podejście uniemożliwia kontenerom monitorującym
+bezpośredni dostęp do zasobów demona Docker.
 """
 
 import socket
@@ -28,40 +29,40 @@ import docker
 import time
 
 
-# Docker SDK client used for communication with Docker Engine.
+# Klient Docker SDK wykorzystywany do komunikacji z Docker Engine.
 docker_client = docker.from_env()
 
 
-# UNIX socket path shared between server and monitoring agent.
+# Ścieżka gniazda UNIX Socket współdzielonego pomiędzy serwerem
+# a agentem monitorującym.
 SOCKET_PATH = "/tmp/socket/metrics.sock"
 
 
 def perform_request(request):
     """
-    Processes a monitoring request received from a client.
+    Przetwarza żądanie monitorujące odebrane od klienta.
 
-    The function validates the requested action, retrieves
-    the target container, and executes the appropriate
-    Docker SDK operation.
+    Funkcja sprawdza żądaną akcję, pobiera wskazany kontener
+    i wykonuje odpowiednią operację przy użyciu Docker SDK.
 
-    Currently supported actions:
+    Aktualnie obsługiwane akcje:
 
     - get_stats
 
     Args:
         request (dict):
-            Request received through the UNIX socket.
+            Żądanie odebrane za pośrednictwem UNIX Socket.
 
     Returns:
         dict:
-            Filtered monitoring event.
+            Przefiltrowane zdarzenie monitorujące.
 
     Raises:
         docker.errors.NotFound:
-            If the requested container does not exist.
+            Jeśli wskazany kontener nie istnieje.
 
         Exception:
-            If an unsupported action is requested.
+            Jeśli przesłano nieobsługiwaną akcję.
     """
 
     command = request["action"]
@@ -92,19 +93,19 @@ def perform_request(request):
 
 def start_server():
     """
-    Creates and initializes the UNIX socket server.
+    Tworzy i inicjalizuje serwer UNIX Socket.
 
-    Startup sequence:
+    Sekwencja uruchomienia:
 
-    1. Remove existing socket file if present.
-    2. Create UNIX socket.
-    3. Bind socket to configured path.
-    4. Set socket permissions.
-    5. Start listening for connections.
+    1. Usunięcie istniejącego pliku gniazda, jeśli istnieje.
+    2. Utworzenie gniazda UNIX Socket.
+    3. Powiązanie gniazda z skonfigurowaną ścieżką.
+    4. Nadanie odpowiednich uprawnień.
+    5. Rozpoczęcie nasłuchiwania połączeń.
 
     Returns:
         socket.socket:
-            Initialized server socket.
+            Zainicjalizowane gniazdo serwera.
     """
 
     if os.path.exists(SOCKET_PATH):
@@ -117,7 +118,7 @@ def start_server():
 
     server.bind(SOCKET_PATH)
 
-    # Allow communication from Docker containers.
+    # Umożliwia komunikację z kontenerów Docker.
     os.chmod(SOCKET_PATH, 0o777)
 
     server.listen(0)
@@ -129,11 +130,11 @@ def start_server():
 
 def close_connection(server):
     """
-    Closes the server socket.
+    Zamyka gniazdo serwera.
 
     Args:
         server (socket.socket):
-            Server socket instance.
+            Instancja gniazda serwera.
     """
 
     server.close()
@@ -141,39 +142,39 @@ def close_connection(server):
 
 def filter_event(stats):
     """
-    Converts raw Docker statistics into a normalized
-    monitoring event.
+    Konwertuje surowe statystyki Dockera do postaci
+    ujednoliconego zdarzenia monitorującego.
 
-    The function extracts only metrics required by
-    SysmonAgent and removes unnecessary Docker SDK data.
+    Funkcja wyodrębnia wyłącznie metryki wymagane przez
+    SysmonAgent i usuwa zbędne dane zwracane przez Docker SDK.
 
-    Collected metrics:
+    Zbierane metryki:
 
-    - CPU utilization percentage
-    - Memory utilization percentage
-    - Memory usage in bytes
-    - Network RX bytes
-    - Network TX bytes
+    - procentowe wykorzystanie CPU,
+    - procentowe wykorzystanie pamięci,
+    - użycie pamięci w bajtach,
+    - liczba odebranych bajtów sieciowych (RX),
+    - liczba wysłanych bajtów sieciowych (TX).
 
     Args:
         stats (dict):
-            Raw Docker statistics returned by
+            Surowe statystyki Dockera zwrócone przez
             container.stats(stream=False).
 
     Returns:
         dict:
-            Filtered monitoring event.
+            Przefiltrowane zdarzenie monitorujące.
     """
 
     now = time.time()
 
-    # CPU usage difference between two consecutive samples.
+    # Różnica wykorzystania CPU pomiędzy dwoma kolejnymi próbkami.
     cpu_delta = (
         stats["cpu_stats"]["cpu_usage"]["total_usage"]
         - stats["precpu_stats"]["cpu_usage"]["total_usage"]
     )
 
-    # Host CPU usage difference between samples.
+    # Różnica wykorzystania CPU hosta pomiędzy próbkami.
     system_delta = (
         stats["cpu_stats"]["system_cpu_usage"]
         - stats["precpu_stats"]["system_cpu_usage"]
@@ -190,7 +191,7 @@ def filter_event(stats):
             * 100
         )
 
-    # Container memory utilization percentage.
+    # Procentowe wykorzystanie pamięci przez kontener.
     memory_percent = (
         stats["memory_stats"]["usage"]
         / stats["memory_stats"]["limit"]
@@ -199,43 +200,43 @@ def filter_event(stats):
 
     filtered_event = {
 
-        # Docker container identifier.
+        # Identyfikator kontenera Docker.
         "container_id":
             stats["id"],
 
-        # Human-readable container name.
+        # Czytelna dla użytkownika nazwa kontenera.
         "container_name":
             stats["name"].lstrip("/"),
 
-        # Event severity level.
+        # Poziom ważności zdarzenia.
         "level":
             "INFO",
 
-        # Event type.
+        # Typ zdarzenia.
         "event":
             "get_stats",
 
-        # CPU utilization percentage.
+        # Procentowe wykorzystanie CPU.
         "cpu_percent":
             round(cpu_percent, 2),
 
-        # Memory utilization percentage.
+        # Procentowe wykorzystanie pamięci.
         "memory_percent":
             round(memory_percent, 2),
 
-        # Memory consumption in bytes.
+        # Zużycie pamięci w bajtach.
         "memory_usage_bytes":
             stats["memory_stats"]["usage"],
 
-        # Total bytes received by container.
+        # Łączna liczba odebranych bajtów.
         "network_rx_bytes":
             stats["networks"]["eth0"]["rx_bytes"],
 
-        # Total bytes transmitted by container.
+        # Łączna liczba wysłanych bajtów.
         "network_tx_bytes":
             stats["networks"]["eth0"]["tx_bytes"],
 
-        # UNIX timestamp used for lag calculations.
+        # Znacznik czasu UNIX wykorzystywany do obliczania opóźnień.
         "created_at":
             now
     }
@@ -245,28 +246,28 @@ def filter_event(stats):
 
 def handle_connections(server):
     """
-    Waits for client connections and processes requests.
+    Oczekuje na połączenia klientów i obsługuje ich żądania.
 
-    The current implementation supports a single connected
-    monitoring client. Requests are handled sequentially.
+    Aktualna implementacja obsługuje jednego podłączonego
+    klienta monitorującego. Żądania przetwarzane są sekwencyjnie.
 
-    Communication flow:
+    Przepływ komunikacji:
 
-    Client
-        -> JSON request
-        -> UNIX socket
+    Klient
+        -> żądanie JSON
+        -> UNIX Socket
 
-    Server
+    Serwer
         -> Docker SDK
-        -> filtered event
+        -> przefiltrowane zdarzenie
 
-    Server
-        -> JSON response
-        -> UNIX socket
+    Serwer
+        -> odpowiedź JSON
+        -> UNIX Socket
 
     Args:
         server (socket.socket):
-            Listening server socket.
+            Gniazdo serwera nasłuchujące połączeń.
     """
 
     print("Waiting for connection...")

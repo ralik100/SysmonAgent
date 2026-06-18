@@ -1,209 +1,212 @@
-# SysmonAgent Documentation
+# Dokumentacja SysmonAgent
 
-## Table of Contents
+## Spis Treści
 
-1. Introduction
-2. Project Objectives
-3. Functional Requirements
-4. Non-Functional Requirements
-5. System Architecture
-6. Deployment Architecture
-7. Component Description
-8. Communication Flow
-9. Configuration
-10. Logging System
-11. Error Handling
-12. Monitoring Process
-13. Testing
-14. Known Limitations
-15. Future Improvements
-16. Conclusion
-
----
-
-# 1. Introduction
-
-## 1.1 Project Description
-
-SysmonAgent is a monitoring system designed to safely collect Docker container metrics without exposing the Docker daemon directly to monitoring containers.
-
-The project implements a client-server architecture where the monitoring agent operates inside a Docker container while a host-side server is responsible for interacting with Docker Engine through the Docker SDK.
-
-Communication between both components is performed through a UNIX socket.
-
-## 1.2 Purpose of the Project
-
-The purpose of this project is to provide a secure and extensible solution for collecting container metrics while maintaining isolation between monitoring components and host resources.
+1. Wprowadzenie
+2. Cele Projektu
+3. Wymagania Funkcjonalne
+4. Wymagania Niefunkcjonalne
+5. Architektura Systemu
+6. Architektura Wdrożeniowa
+7. Opis Komponentów
+8. Przepływ Komunikacji
+9. Konfiguracja
+10. System Logowania
+11. Obsługa Błędów
+12. Proces Monitorowania
+13. Testowanie
+14. Znane Ograniczenia
+15. Możliwe Usprawnienia
+16. Podsumowanie
 
 ---
 
-# 2. Project Objectives
+# 1. Wprowadzenie
 
-The main objectives of the project are:
+## 1.1 Opis Projektu
 
-* Collect metrics from selected Docker containers.
-* Avoid direct exposure of Docker Engine to monitoring containers.
-* Provide configurable monitoring intervals.
-* Implement a unified event logging mechanism.
-* Allow easy addition of new collectors.
-* Minimize host resource usage.
+SysmonAgent jest systemem monitorowania zaprojektowanym do bezpiecznego zbierania metryk kontenerów Docker bez bezpośredniego udostępniania demona Docker kontenerom monitorującym.
 
----
+Projekt implementuje architekturę klient-serwer, w której agent monitorujący działa wewnątrz kontenera Docker, natomiast serwer uruchomiony na hoście odpowiada za komunikację z Docker Engine przy użyciu Docker SDK.
 
-# 3. Functional Requirements
+Komunikacja pomiędzy obydwoma komponentami odbywa się za pomocą gniazda UNIX.
 
-The system shall:
+## 1.2 Cel Projektu
 
-* Monitor selected Docker containers.
-* Collect CPU usage metrics.
-* Collect memory usage metrics.
-* Collect network usage metrics.
-* Store collected events in JSON format.
-* Allow configuration through a JSON configuration file.
-* Support multiple collectors.
-* Support configurable collector execution intervals.
+Celem projektu jest dostarczenie bezpiecznego i rozszerzalnego rozwiązania do zbierania metryk kontenerów przy jednoczesnym zachowaniu izolacji pomiędzy komponentami monitorującymi a zasobami hosta.
 
 ---
 
-# 4. Non-Functional Requirements
+# 2. Cele Projektu
 
-The system shall provide:
+Główne cele projektu:
 
-## Security
-
-* No direct access to Docker daemon from monitoring containers.
-* Isolation between monitoring logic and host resources.
-
-## Maintainability
-
-* Modular code structure.
-* Separation of responsibilities between components.
-
-## Extensibility
-
-* Ability to add new collectors with minimal code modifications.
-
-## Performance
-
-* Lightweight operation.
-* Minimal CPU and memory overhead.
+* Zbieranie metryk z wybranych kontenerów Docker.
+* Unikanie bezpośredniego udostępniania Docker Engine kontenerom monitorującym.
+* Zapewnienie konfigurowalnych interwałów monitorowania.
+* Implementacja ujednoliconego mechanizmu logowania zdarzeń.
+* Umożliwienie łatwego dodawania nowych kolektorów.
+* Minimalizacja wykorzystania zasobów hosta.
 
 ---
 
-# 5. System Architecture
+# 3. Wymagania Funkcjonalne
 
-## 5.1 Architecture Overview
+System powinien:
+
+* Monitorować wybrane kontenery Docker.
+* Zbierać metryki wykorzystania procesora.
+* Zbierać metryki wykorzystania pamięci.
+* Zbierać metryki wykorzystania sieci.
+* Zapisywać zebrane zdarzenia w formacie JSON.
+* Umożliwiać konfigurację za pomocą pliku JSON.
+* Obsługiwać wiele kolektorów.
+* Obsługiwać konfigurowalne interwały wykonywania kolektorów.
+
+---
+
+# 4. Wymagania Niefunkcjonalne
+
+System powinien zapewniać:
+
+## Bezpieczeństwo
+
+* Brak bezpośredniego dostępu do demona Docker z poziomu kontenerów monitorujących.
+* Izolację pomiędzy logiką monitorowania a zasobami hosta.
+
+## Utrzymywalność
+
+* Modułową strukturę kodu.
+* Rozdzielenie odpowiedzialności pomiędzy komponentami.
+
+## Rozszerzalność
+
+* Możliwość dodawania nowych kolektorów przy minimalnych zmianach w kodzie.
+
+## Wydajność
+
+* Lekkie działanie aplikacji.
+* Minimalne zużycie procesora i pamięci.
+
+---
+
+# 5. Architektura Systemu
+
+## 5.1 Przegląd Architektury
 
 ```text
 +----------------------+
-| Monitoring Container |
+| Kontener Monitorujący|
 +----------+-----------+
            |
-           | UNIX Socket
+           | Gniazdo UNIX
            |
 +----------v-----------+
-| Host Server          |
+| Serwer Hosta         |
 | Docker SDK           |
 +----------+-----------+
            |
            | Docker API
            |
 +----------v-----------+
-| Monitored Containers |
+| Monitorowane         |
+| Kontenery            |
 +----------------------+
 ```
 
-## 5.2 Architecture Rationale
+## 5.2 Uzasadnienie Architektury
 
-The chosen architecture separates monitoring functionality from host-level resource access.
+Wybrana architektura oddziela funkcjonalność monitorowania od dostępu do zasobów hosta.
 
-Instead of exposing the Docker daemon socket to the monitoring container, a dedicated host-side server is responsible for metric collection.
+Zamiast udostępniać kontenerowi monitorującemu gniazdo demona Docker, za zbieranie metryk odpowiada dedykowany serwer działający po stronie hosta.
 
-This approach improves security and follows the principle of least privilege.
+Takie podejście zwiększa bezpieczeństwo i realizuje zasadę najmniejszych uprawnień.
 
-## 5.3 Data Flow
+## 5.3 Przepływ Danych
 
-The following diagram presents the complete lifecycle of monitoring data inside the system.
+Poniższy diagram przedstawia pełny cykl życia danych monitorujących w systemie.
 
-Monitored Container
+```text
+Monitorowany Kontener
          |
-         | Docker Statistics
+         | Statystyki Docker
          v
 Docker Engine
          |
          | Docker SDK
          v
-Host Server
+Serwer Hosta
          |
-         | Filtered Metrics
+         | Przefiltrowane Metryki
          v
-UNIX Socket
-         |
-         v
-Monitoring Client
-         |
-         | Monitoring Event
-         v
-Logger Queue
+Gniazdo UNIX
          |
          v
-Batch Writer
+Klient Monitorujący
+         |
+         | Zdarzenie Monitorujące
+         v
+Kolejka Loggera
          |
          v
-JSON Log File
+Zapis Wsadowy
+         |
+         v
+Plik Logów JSON
+```
 
-The monitoring client never communicates directly with Docker Engine. All communication is performed through the host-side server, which acts as a controlled access layer between monitoring components and host resources.
+Klient monitorujący nigdy nie komunikuje się bezpośrednio z Docker Engine. Cała komunikacja odbywa się za pośrednictwem serwera hosta, który pełni rolę kontrolowanej warstwy dostępu pomiędzy komponentami monitorującymi a zasobami systemowymi.
 
 ---
 
-# 6. Deployment Architecture
+# 6. Architektura Wdrożeniowa
 
-## 6.1 Deployment Model
+## 6.1 Model Wdrożenia
 
-SysmonAgent is deployed using a hybrid architecture consisting of:
+SysmonAgent jest wdrażany przy użyciu architektury hybrydowej składającej się z:
 
-* a host-side monitoring server,
-* a containerized monitoring client,
-* monitored Docker containers.
+* serwera monitorującego działającego na hoście,
+* klienta monitorującego uruchomionego w kontenerze,
+* monitorowanych kontenerów Docker.
 
-The monitoring client runs inside a Docker container and communicates with the host-side server through a UNIX socket.
+Klient monitorujący działa wewnątrz kontenera Docker i komunikuje się z serwerem hosta za pośrednictwem gniazda UNIX.
 
-The server is responsible for interacting with Docker Engine and collecting container statistics using Docker SDK.
+Serwer odpowiada za komunikację z Docker Engine oraz zbieranie statystyk kontenerów przy użyciu Docker SDK.
 
-This architecture eliminates the need to expose the Docker daemon socket (`/var/run/docker.sock`) to monitoring containers.
+Architektura ta eliminuje konieczność udostępniania gniazda demona Docker (`/var/run/docker.sock`) kontenerom monitorującym.
 
 ```text
 +---------------------------+
-| Host Operating System     |
+| System Operacyjny Hosta   |
 |                           |
 |  +-------------------+    |
-|  | Monitoring Server |    |
+|  | Serwer Monitorujący|   |
 |  +---------+---------+    |
 |            |              |
-|            | UNIX Socket  |
+|            | Gniazdo UNIX |
 |            |              |
 +------------+--------------+
              |
              v
 +---------------------------+
-| Monitoring Container      |
-| SysmonAgent Client        |
+| Kontener Monitorujący     |
+| Klient SysmonAgent        |
 +---------------------------+
 
 +---------------------------+
-| Monitored Containers      |
+| Monitorowane Kontenery    |
 | PostgreSQL                |
-| Future Services           |
+| Przyszłe Usługi           |
 +---------------------------+
 ```
 
 ---
 
-## 6.2 Docker Image Design
+## 6.2 Konstrukcja Obrazu Docker
 
-The monitoring client is packaged as a Docker image.
+Klient monitorujący jest pakowany jako obraz Docker.
 
-The image is built from the official Python 3.11 Slim image.
+Obraz budowany jest na podstawie oficjalnego obrazu Python 3.11 Slim.
 
 Dockerfile:
 
@@ -211,17 +214,17 @@ Dockerfile:
 FROM python:3.11-slim
 ```
 
-### Build Process
+### Proces Budowania
 
-The image creation process performs the following steps:
+Proces tworzenia obrazu wykonuje następujące kroki:
 
-1. Creates the application working directory.
-2. Copies dependency definitions.
-3. Installs required Python packages.
-4. Copies application source code.
-5. Defines the application entry point.
+1. Tworzy katalog roboczy aplikacji.
+2. Kopiuje definicje zależności.
+3. Instaluje wymagane pakiety Python.
+4. Kopiuje kod źródłowy aplikacji.
+5. Definiuje punkt wejściowy aplikacji.
 
-Build sequence:
+Sekwencja budowania:
 
 ```dockerfile
 WORKDIR /client
@@ -235,35 +238,35 @@ COPY /src/agent .
 ENTRYPOINT ["python","main.py"]
 ```
 
-### Design Rationale
+### Uzasadnienie Projektowe
 
-The slim Python image was selected to:
+Obraz Python Slim został wybrany w celu:
 
-* minimize image size,
-* reduce attack surface,
-* decrease deployment time,
-* simplify dependency management.
-
----
-
-## 6.3 Docker Compose Configuration
-
-Docker Compose is used to orchestrate all containers required by the monitoring environment.
-
-Current deployment consists of:
-
-| Service  | Purpose                     |
-| -------- | --------------------------- |
-| client   | Monitoring agent            |
-| postgres | Example monitored container |
+* minimalizacji rozmiaru obrazu,
+* zmniejszenia powierzchni ataku,
+* skrócenia czasu wdrożenia,
+* uproszczenia zarządzania zależnościami.
 
 ---
 
-## 6.4 Monitoring Client Service
+## 6.3 Konfiguracja Docker Compose
 
-The monitoring agent is deployed as the `client` service.
+Docker Compose jest wykorzystywany do orkiestracji wszystkich kontenerów wymaganych przez środowisko monitorujące.
 
-### Build Configuration
+Obecna konfiguracja składa się z:
+
+| Usługa   | Przeznaczenie                     |
+| -------- | --------------------------------- |
+| client   | Agent monitorujący                |
+| postgres | Przykładowy monitorowany kontener |
+
+---
+
+## 6.4 Usługa Klienta Monitorującego
+
+Agent monitorujący jest wdrażany jako usługa `client`.
+
+### Konfiguracja Budowania
 
 ```yaml
 build:
@@ -271,17 +274,17 @@ build:
   dockerfile: Dockerfile
 ```
 
-The container image is built locally using the project Dockerfile.
+Obraz kontenera budowany jest lokalnie przy użyciu projektowego pliku Dockerfile.
 
-### Image
+### Obraz
 
 ```yaml
 image: ralik100/sysag:client_v1
 ```
 
-This image contains the complete monitoring application.
+Obraz zawiera kompletną aplikację monitorującą.
 
-### Shared Volumes
+### Współdzielone Wolumeny
 
 ```yaml
 volumes:
@@ -289,9 +292,9 @@ volumes:
   - ./src/agent/output:/output
 ```
 
-#### UNIX Socket Mount
+#### Montowanie Gniazda UNIX
 
-The first volume shares the UNIX socket between the host server and monitoring client.
+Pierwszy wolumen współdzieli gniazdo UNIX pomiędzy serwerem hosta a klientem monitorującym.
 
 ```text
 Host
@@ -299,15 +302,15 @@ Host
 
         ⇅
 
-Container
+Kontener
 /tmp/socket/metrics.sock
 ```
 
-This mount provides the only communication channel between both components.
+To montowanie stanowi jedyny kanał komunikacji pomiędzy obydwoma komponentami.
 
-#### Log Storage Mount
+#### Montowanie Logów
 
-The second volume provides persistent storage for monitoring logs.
+Drugi wolumen zapewnia trwałe przechowywanie logów monitorujących.
 
 ```text
 Host
@@ -315,23 +318,23 @@ Host
 
         ⇅
 
-Container
+Kontener
 /output
 ```
 
-This allows logs generated inside the container to remain available on the host filesystem.
+Dzięki temu logi wygenerowane wewnątrz kontenera pozostają dostępne w systemie plików hosta.
 
 ---
 
-## 6.5 Monitored PostgreSQL Service
+## 6.5 Monitorowana Usługa PostgreSQL
 
-The project includes a PostgreSQL container used as an example monitored workload.
+Projekt zawiera kontener PostgreSQL wykorzystywany jako przykładowe monitorowane obciążenie.
 
 ```yaml
 image: postgres:16-alpine
 ```
 
-### Database Configuration
+### Konfiguracja Bazy Danych
 
 ```yaml
 environment:
@@ -340,11 +343,11 @@ environment:
   POSTGRES_PASSWORD: super_secret_password
 ```
 
-The container automatically creates a database instance during startup.
+Kontener automatycznie tworzy instancję bazy danych podczas uruchamiania.
 
-### Health Check
+### Kontrola Stanu
 
-The PostgreSQL container exposes a health check:
+Kontener PostgreSQL udostępnia mechanizm sprawdzania gotowości:
 
 ```yaml
 healthcheck:
@@ -353,7 +356,7 @@ healthcheck:
      "pg_isready -U sysmon -d sysmon"]
 ```
 
-The monitoring client is configured to wait until PostgreSQL becomes healthy before startup.
+Klient monitorujący został skonfigurowany tak, aby oczekiwał na poprawne uruchomienie PostgreSQL przed startem.
 
 ```yaml
 depends_on:
@@ -361,52 +364,50 @@ depends_on:
     condition: service_healthy
 ```
 
-This prevents monitoring attempts against containers that are not yet ready.
+Zapobiega to próbom monitorowania kontenerów, które nie są jeszcze gotowe do pracy.
 
 ---
 
-## 6.6 Security Considerations
+## 6.6 Aspekty Bezpieczeństwa
 
-One of the primary design goals of SysmonAgent is secure metric collection.
+Jednym z głównych założeń projektowych SysmonAgent jest bezpieczne zbieranie metryk.
 
-Unlike many Docker monitoring solutions, the monitoring container does not receive direct access to:
+W przeciwieństwie do wielu rozwiązań monitorujących Docker, kontener monitorujący nie otrzymuje bezpośredniego dostępu do:
 
-* Docker daemon socket,
-* Docker Engine API,
-* privileged container mode,
-* host process information.
+* gniazda demona Docker,
+* API Docker Engine,
+* trybu uprzywilejowanego kontenera,
+* informacji o procesach hosta.
 
-Instead, all Docker interactions are performed by a dedicated host-side server.
+Zamiast tego wszystkie operacje związane z Dockerem wykonywane są przez dedykowany serwer działający po stronie hosta.
 
-Security benefits include:
+Korzyści bezpieczeństwa:
 
-* reduced attack surface,
-* improved component isolation,
-* adherence to the Principle of Least Privilege,
-* protection of Docker Engine from container compromise.
+* zmniejszona powierzchnia ataku,
+* lepsza izolacja komponentów,
+* zgodność z zasadą najmniejszych uprawnień,
+* ochrona Docker Engine przed kompromitacją kontenera.
 
-Only filtered monitoring data is exposed to the monitoring client.
+Klient monitorujący otrzymuje wyłącznie przefiltrowane dane monitorujące.
 
-Raw Docker API responses never leave the host-side server.
+Surowe odpowiedzi API Dockera nigdy nie opuszczają serwera działającego na hoście.
 
-```
-```
+---
 
+# 7. Opis Komponentów
 
-# 7. Component Description
+## 7.1 Klient Monitorujący
 
-## 7.1 Monitoring Client
+Odpowiedzialności:
 
-Responsibilities:
+* Wczytywanie konfiguracji aplikacji.
+* Harmonogramowanie kolektorów.
+* Wysyłanie żądań do serwera.
+* Odbieranie zebranych metryk.
+* Generowanie zdarzeń monitorujących.
+* Przekazywanie zdarzeń do systemu logowania.
 
-* Load application configuration.
-* Schedule collectors.
-* Send requests to the server.
-* Receive collected metrics.
-* Generate monitoring events.
-* Forward events to the logging subsystem.
-
-### Main Modules
+### Główne Moduły
 
 * main.py
 * loop.py
@@ -415,55 +416,54 @@ Responsibilities:
 
 ---
 
-## 7.2 Host Server
+## 7.2 Serwer Hosta
 
-Responsibilities:
+Odpowiedzialności:
 
-* Listen for incoming client connections.
-* Receive metric collection requests.
-* Communicate with Docker Engine.
-* Filter collected metrics.
-* Return results to the client.
+* Nasłuchiwanie połączeń klienta.
+* Odbieranie żądań zbierania metryk.
+* Komunikacja z Docker Engine.
+* Filtrowanie zebranych metryk.
+* Zwracanie wyników do klienta.
 
-### Main Modules
+### Główne Moduły
 
 * main.py
 * server.py
 
 ---
 
-## 7.3 Collectors
+## 7.3 Kolektory
 
-Collectors are responsible for gathering specific types of metrics.
+Kolektory odpowiadają za zbieranie określonych typów metryk.
 
-Current collectors:
+Obecnie dostępne kolektory:
 
 * container_stats
 
-Future collectors may include:
+Przyszłe kolektory mogą obejmować:
 
-* filesystem metrics
-* process metrics
-* application-specific metrics
+* metryki systemu plików,
+* metryki procesów,
+* metryki specyficzne dla aplikacji.
 
 ---
 
 ## 7.4 Logger
 
-Responsibilities:
+Odpowiedzialności:
 
-* Queue events.
-* Batch log writes.
-* Persist events to storage.
-* Provide unified event formatting.
+* Kolejkowanie zdarzeń.
+* Wsadowy zapis logów.
+* Trwałe przechowywanie danych.
+* Zapewnienie ujednoliconego formatu zdarzeń.
 
 ---
+## 7.5 Struktura Kodu Źródłowego
 
-## 7.5 Source Code Structure
+Projekt wykorzystuje architekturę modułową, w której poszczególne komponenty zostały rozdzielone zgodnie z ich odpowiedzialnościami.
 
-The project follows a modular architecture where individual components are separated according to their responsibilities.
-
-### Project Structure
+### Struktura Projektu
 
 ```text
 SysmonAgent/
@@ -489,68 +489,68 @@ SysmonAgent/
 └── README.md
 ```
 
-### Module Responsibilities
+### Odpowiedzialności Modułów
 
-| Module              | Responsibility                                       |
-| ------------------- | ---------------------------------------------------- |
-| client/main.py      | Application startup and initialization               |
-| client/loop.py      | Collector scheduling and execution                   |
-| client/logger.py    | Event queue management and persistence               |
-| client/heartbeat.py | Heartbeat event generation                           |
-| client/collectors/* | Monitoring data collection                           |
-| server/main.py      | Host server startup                                  |
-| server/server.py    | UNIX socket communication and Docker SDK integration |
-| config.json         | Runtime configuration                                |
-| docker-compose.yml  | Monitoring container deployment                      |
-| Dockerfile          | Prepared Docker image for monitoring container       |
-| start.bat           | Automated application startup                        |
+| Moduł | Odpowiedzialność |
+|--------|------------------|
+| client/main.py | Uruchamianie i inicjalizacja aplikacji |
+| client/loop.py | Harmonogramowanie i wykonywanie kolektorów |
+| client/logger.py | Zarządzanie kolejką zdarzeń oraz ich trwały zapis |
+| client/heartbeat.py | Generowanie zdarzeń heartbeat |
+| client/collectors/* | Pobieranie danych monitoringowych |
+| server/main.py | Uruchamianie serwera hosta |
+| server/server.py | Komunikacja przez UNIX Socket oraz integracja z Docker SDK |
+| config.json | Konfiguracja aplikacji |
+| docker-compose.yml | Definicja wdrożenia kontenera monitorującego |
+| Dockerfile | Definicja obrazu Docker klienta monitorującego |
+| start.bat | Automatyczne uruchamianie aplikacji |
 
-### Design Principles
+### Założenia Projektowe
 
-The project design follows several principles:
+Projekt został zaprojektowany zgodnie z następującymi zasadami:
 
-* Separation of responsibilities.
-* Modular architecture.
-* Configuration-driven behavior.
-* Extensibility through collectors.
-* Minimal coupling between modules.
-* Principle of least privilege.
+* Rozdzielenie odpowiedzialności.
+* Architektura modułowa.
+* Zachowanie sterowane konfiguracją.
+* Rozszerzalność poprzez kolektory.
+* Minimalne zależności pomiędzy modułami.
+* Zasada najmniejszych uprawnień (Principle of Least Privilege).
 
-These principles simplify maintenance and allow new functionality to be added with minimal modifications to existing code.
+Powyższe założenia upraszczają utrzymanie projektu oraz umożliwiają dodawanie nowych funkcjonalności przy minimalnej modyfikacji istniejącego kodu.
 
 ---
 
-# 8. Communication Flow
+# 8. Przepływ Komunikacji
 
-## 8.1 Request Flow
+## 8.1 Przepływ Żądania
 
 ```text
-Client
+Klient
    |
-   | Request
+   | Żądanie
    v
-Server
+Serwer
    |
    | Docker SDK
    v
 Docker Engine
 ```
 
-## 8.2 Response Flow
+## 8.2 Przepływ Odpowiedzi
 
 ```text
 Docker Engine
    |
-   | Metrics
+   | Metryki
    v
-Server
+Serwer
    |
-   | Filtered Metrics
+   | Przefiltrowane Metryki
    v
-Client
+Klient
 ```
 
-## 8.3 Example Request
+## 8.3 Przykładowe Żądanie
 
 ```json
 {
@@ -559,7 +559,7 @@ Client
 }
 ```
 
-## 8.4 Example Response
+## 8.4 Przykładowa Odpowiedź
 
 ```json
 {
@@ -572,11 +572,11 @@ Client
 
 ---
 
-# 9. Configuration
+# 9. Konfiguracja
 
-System configuration is stored in the `config.json` file.
+Konfiguracja systemu przechowywana jest w pliku `config.json`.
 
-## Example Configuration
+## Przykładowa Konfiguracja
 
 ```json
 {
@@ -590,31 +590,31 @@ System configuration is stored in the `config.json` file.
 }
 ```
 
-## Configuration Parameters
+## Parametry Konfiguracyjne
 
-| Parameter                 | Description                   |
-| ------------------------- | ----------------------------- |
-| mode                      | Application execution mode    |
-| intervals                 | Collector execution intervals |
-| collectors                | Enabled collectors            |
-| heartbeat                 | Heartbeat settings            |
-| logger                    | Logger configuration          |
-| monitored_container_names | Containers to monitor         |
+| Parametr | Opis |
+|-----------|------|
+| mode | Tryb działania aplikacji |
+| intervals | Interwały wykonywania kolektorów |
+| collectors | Aktywne kolektory |
+| heartbeat | Konfiguracja heartbeat |
+| logger | Konfiguracja loggera |
+| monitored_container_names | Lista monitorowanych kontenerów |
 
-## Configuration Parameters
+## Szczegółowy Opis Parametrów
 
 ### mode
 
-**Type:** `string`
+**Typ:** `string`
 
-Determines how the monitoring agent executes collectors.
+Określa sposób wykonywania kolektorów przez agenta monitorującego.
 
-Possible values:
+Możliwe wartości:
 
-* `loop` - collectors are executed continuously according to intervals defined in the `intervals` section.
-* `once` - each collector is executed exactly one time and the application exits afterwards.
+* `loop` — kolektory wykonywane są cyklicznie zgodnie z interwałami zdefiniowanymi w sekcji `intervals`.
+* `once` — każdy kolektor wykonywany jest dokładnie jeden raz, po czym aplikacja kończy działanie.
 
-Example:
+Przykład:
 
 ```json
 {
@@ -626,13 +626,13 @@ Example:
 
 ### intervals
 
-**Type:** `dictionary`
+**Typ:** `dictionary`
 
-Defines execution intervals (in seconds) for individual collectors.
+Definiuje interwały wykonywania (w sekundach) dla poszczególnych kolektorów.
 
-Each enabled collector should have a corresponding interval.
+Każdy aktywny kolektor powinien posiadać przypisany interwał.
 
-Example:
+Przykład:
 
 ```json
 {
@@ -646,23 +646,23 @@ Example:
 
 ### collectors
 
-**Type:** `array[string]`
+**Typ:** `array[string]`
 
-List of enabled collectors.
+Lista aktywnych kolektorów.
 
-Available collectors:
+Dostępne kolektory:
 
 #### container_stats
 
-Collects filtered Docker container statistics including:
+Zbiera przefiltrowane statystyki kontenerów Docker obejmujące:
 
-* CPU utilization
-* Memory utilization
-* Memory usage in bytes
-* Network RX bytes
-* Network TX bytes
+* wykorzystanie procesora (CPU),
+* wykorzystanie pamięci operacyjnej (RAM),
+* zużycie pamięci w bajtach,
+* liczbę odebranych bajtów sieciowych (RX),
+* liczbę wysłanych bajtów sieciowych (TX).
 
-Example:
+Przykład:
 
 ```json
 {
@@ -676,18 +676,18 @@ Example:
 
 ### heartbeat
 
-**Type:** `object`
+**Typ:** `object`
 
-Controls periodic heartbeat event generation.
+Steruje generowaniem cyklicznych zdarzeń heartbeat.
 
-Parameters:
+Parametry:
 
-| Parameter | Type    | Description                              |
-| --------- | ------- | ---------------------------------------- |
-| enabled   | boolean | Enables or disables heartbeat generation |
-| interval  | integer | Heartbeat interval in seconds            |
+| Parametr | Typ | Opis |
+|-----------|------|------|
+| enabled | boolean | Włącza lub wyłącza generowanie heartbeat |
+| interval | integer | Interwał heartbeat wyrażony w sekundach |
 
-Example:
+Przykład:
 
 ```json
 {
@@ -702,19 +702,19 @@ Example:
 
 ### logger
 
-**Type:** `object`
+**Typ:** `object`
 
-Configures application logging.
+Konfiguruje sposób logowania zdarzeń przez aplikację.
 
-Parameters:
+Parametry:
 
-| Parameter      | Type    | Description                                |
-| -------------- | ------- | ------------------------------------------ |
-| batchsize      | integer | Number of events written in a single batch |
-| flush_interval | integer | Maximum time between batch writes          |
-| log_filename   | string  | Output log file name                       |
+| Parametr | Typ | Opis |
+|-----------|------|------|
+| batchsize | integer | Liczba zdarzeń zapisywanych w jednym pakiecie |
+| flush_interval | integer | Maksymalny czas pomiędzy kolejnymi zapisami |
+| log_filename | string | Nazwa pliku logów |
 
-Example:
+Przykład:
 
 ```json
 {
@@ -730,11 +730,11 @@ Example:
 
 ### warning_threshold
 
-**Type:** `integer`
+**Typ:** `integer`
 
-Defines warning threshold percentage for monitored metrics.
+Definiuje próg ostrzegawczy dla monitorowanych metryk wyrażony w procentach.
 
-Example:
+Przykład:
 
 ```json
 {
@@ -746,11 +746,11 @@ Example:
 
 ### monitored_container_names
 
-**Type:** `array[string]`
+**Typ:** `array[string]`
 
-List of Docker container names that should be monitored.
+Lista nazw kontenerów Docker, które mają być monitorowane.
 
-Example:
+Przykład:
 
 ```json
 {
@@ -760,47 +760,45 @@ Example:
 }
 ```
 
-
 ---
+# 10. System Logowania
 
-# 10. Logging System
+Podsystem logowania odpowiada za przechowywanie wszystkich zdarzeń generowanych przez aplikację monitorującą w ujednoliconym formacie JSON.
 
-The logging subsystem is responsible for storing all events generated by the monitoring application in a unified JSON format.
+Zamiast zapisywać każde zdarzenie bezpośrednio na dysk, zdarzenia są najpierw umieszczane w wewnętrznej kolejce. Logger okresowo zapisuje zgromadzone zdarzenia partiami, co zmniejsza liczbę operacji dyskowych i poprawia wydajność.
 
-Instead of writing every event directly to disk, events are first placed in an internal queue. The logger periodically writes queued events in batches, reducing the number of disk operations and improving performance.
-
-## Logging Workflow
+## Przepływ Logowania
 
 ```text
-Collector / Heartbeat
+Kolektor / Heartbeat
          |
          v
-    Event Creation
+  Utworzenie Zdarzenia
          |
          v
-      Queue
+       Kolejka
          |
          v
-   Batch Writer
+   Zapis Wsadowy
          |
          v
-     Log File
+    Plik Logów
 ```
 
-## Event Types
+## Typy Zdarzeń
 
-The system currently generates two types of events:
+System aktualnie generuje dwa typy zdarzeń:
 
-* Monitoring events
-* Heartbeat events
+* Zdarzenia monitorujące
+* Zdarzenia heartbeat
 
 ---
 
-## Monitoring Event Structure
+## Struktura Zdarzenia Monitorującego
 
-Monitoring events are generated whenever a collector successfully gathers container metrics.
+Zdarzenia monitorujące są generowane za każdym razem, gdy kolektor pomyślnie pobierze metryki kontenera.
 
-Example:
+Przykład:
 
 ```json
 {
@@ -818,79 +816,79 @@ Example:
 }
 ```
 
-### Monitoring Event Fields
+### Pola Zdarzenia Monitorującego
 
-| Field              | Description                                                           |
-| ------------------ | --------------------------------------------------------------------- |
-| container_id       | Unique Docker container identifier                                    |
-| container_name     | Human-readable Docker container name                                  |
-| level              | Event severity level                                                  |
-| event              | Event type generated by the collector                                 |
-| cpu_percent        | Container CPU utilization percentage                                  |
-| memory_percent     | Container memory utilization percentage                               |
-| memory_usage_bytes | Memory currently consumed by the container in bytes                   |
-| network_rx_bytes   | Total number of bytes received by the container network interfaces    |
-| network_tx_bytes   | Total number of bytes transmitted by the container network interfaces |
-| created_at         | UNIX timestamp used for programmatic processing                       |
-| timestamp          | ISO-8601 timestamp used for human-readable logs                       |
+| Pole | Opis |
+|--------|--------|
+| container_id | Unikalny identyfikator kontenera Docker |
+| container_name | Czytelna dla użytkownika nazwa kontenera |
+| level | Poziom ważności zdarzenia |
+| event | Typ zdarzenia wygenerowanego przez kolektor |
+| cpu_percent | Procentowe wykorzystanie procesora przez kontener |
+| memory_percent | Procentowe wykorzystanie pamięci przez kontener |
+| memory_usage_bytes | Aktualne zużycie pamięci przez kontener w bajtach |
+| network_rx_bytes | Łączna liczba bajtów odebranych przez interfejsy sieciowe kontenera |
+| network_tx_bytes | Łączna liczba bajtów wysłanych przez interfejsy sieciowe kontenera |
+| created_at | Znacznik czasu UNIX wykorzystywany do obliczeń programistycznych |
+| timestamp | Znacznik czasu ISO-8601 przeznaczony do odczytu przez użytkownika |
 
 ---
 
-## Metric Collection Methodology
+## Metodologia Zbierania Metryk
 
-Container statistics are collected using Docker SDK for Python through the `container.stats(stream=False)` API.
+Statystyki kontenerów pobierane są przy użyciu Docker SDK for Python za pomocą interfejsu `container.stats(stream=False)`.
 
-The server receives raw Docker statistics and filters only the information required by the monitoring client.
+Serwer odbiera surowe statystyki Dockera i filtruje wyłącznie informacje wymagane przez klienta monitorującego.
 
-### CPU Percentage
+### Wykorzystanie CPU
 
-CPU utilization is calculated using the difference between current and previous CPU usage samples provided by Docker.
+Wykorzystanie procesora obliczane jest na podstawie różnicy pomiędzy bieżącą i poprzednią próbką wykorzystania CPU dostarczoną przez Docker.
 
-Formula:
+Wzór:
 
 ```text
 CPU % = (cpu_delta / system_delta) * online_cpus * 100
 ```
 
-Where:
+Gdzie:
 
-* `cpu_delta` is the difference in container CPU usage.
-* `system_delta` is the difference in host CPU usage.
-* `online_cpus` is the number of available CPU cores.
+* `cpu_delta` oznacza różnicę wykorzystania CPU przez kontener.
+* `system_delta` oznacza różnicę całkowitego wykorzystania CPU hosta.
+* `online_cpus` oznacza liczbę dostępnych rdzeni procesora.
 
-### Memory Percentage
+### Wykorzystanie Pamięci
 
-Memory utilization is calculated using:
+Wykorzystanie pamięci obliczane jest według wzoru:
 
 ```text
 memory_usage / memory_limit * 100
 ```
 
-Where:
+Gdzie:
 
-* `memory_usage` is the current memory consumption of the container.
-* `memory_limit` is the maximum memory available to the container.
+* `memory_usage` oznacza aktualne zużycie pamięci przez kontener.
+* `memory_limit` oznacza maksymalną ilość pamięci dostępną dla kontenera.
 
-### Network Usage
+### Wykorzystanie Sieci
 
-Network statistics are obtained from Docker network counters.
+Statystyki sieciowe pobierane są z liczników sieciowych Dockera.
 
-* `network_rx_bytes` represents total received bytes.
-* `network_tx_bytes` represents total transmitted bytes.
+* `network_rx_bytes` oznacza całkowitą liczbę odebranych bajtów.
+* `network_tx_bytes` oznacza całkowitą liczbę wysłanych bajtów.
 
-These values are cumulative counters maintained by Docker since container startup.
+Wartości te są licznikami narastającymi utrzymywanymi przez Docker od momentu uruchomienia kontenera.
 
 ---
 
-## Heartbeat Mechanism
+## Mechanizm Heartbeat
 
-The heartbeat mechanism provides information about the internal state and health of the monitoring application.
+Mechanizm heartbeat dostarcza informacji o wewnętrznym stanie oraz kondycji aplikacji monitorującej.
 
-Unlike monitoring events, heartbeat events are not related to Docker containers. Instead, they describe the operational status and performance of SysmonAgent itself.
+W przeciwieństwie do zdarzeń monitorujących, zdarzenia heartbeat nie dotyczą kontenerów Docker. Opisują one stan działania i wydajność samego SysmonAgent.
 
-Heartbeat generation can be enabled or disabled through the configuration file.
+Generowanie heartbeat może zostać włączone lub wyłączone w pliku konfiguracyjnym.
 
-Example configuration:
+Przykładowa konfiguracja:
 
 ```json
 {
@@ -901,9 +899,9 @@ Example configuration:
 }
 ```
 
-When enabled, the application periodically generates heartbeat events according to the configured interval.
+Po włączeniu aplikacja cyklicznie generuje zdarzenia heartbeat zgodnie ze skonfigurowanym interwałem.
 
-### Heartbeat Event Example
+### Przykładowe Zdarzenie Heartbeat
 
 ```json
 {
@@ -927,69 +925,69 @@ When enabled, the application periodically generates heartbeat events according 
 }
 ```
 
-### Heartbeat Event Fields
+### Pola Zdarzenia Heartbeat
 
-| Field     | Description                                                        |
-| --------- | ------------------------------------------------------------------ |
-| level     | Event type identifier. Heartbeat events use the value `HEARTBEAT`. |
-| uptime    | Time elapsed since application startup, expressed in seconds.      |
-| timestamp | ISO-8601 timestamp indicating when the heartbeat was generated.    |
+| Pole | Opis |
+|--------|--------|
+| level | Identyfikator typu zdarzenia. Dla heartbeat przyjmuje wartość `HEARTBEAT`. |
+| uptime | Czas działania aplikacji od uruchomienia wyrażony w sekundach. |
+| timestamp | Znacznik czasu ISO-8601 określający moment wygenerowania heartbeat. |
 
-### Performance Metrics
+### Metryki Wydajności
 
-The `performance` section contains information about event processing efficiency.
+Sekcja `performance` zawiera informacje dotyczące wydajności przetwarzania zdarzeń.
 
-| Field            | Description                                                            |
-| ---------------- | ---------------------------------------------------------------------- |
-| events_processed | Total number of events processed since startup.                        |
-| events_per_sec   | Average event throughput per second.                                   |
-| avg_lag          | Average processing delay between event creation and event persistence. |
-| max_lag          | Maximum observed processing delay.                                     |
+| Pole | Opis |
+|--------|--------|
+| events_processed | Łączna liczba przetworzonych zdarzeń od uruchomienia aplikacji |
+| events_per_sec | Średnia liczba zdarzeń przetwarzanych na sekundę |
+| avg_lag | Średnie opóźnienie pomiędzy utworzeniem a zapisaniem zdarzenia |
+| max_lag | Maksymalne zaobserwowane opóźnienie przetwarzania |
 
-### Queue Metrics
+### Metryki Kolejki
 
-The `queue` section provides information about the logger event queue.
+Sekcja `queue` dostarcza informacji o kolejce zdarzeń loggera.
 
-| Field       | Description                                    |
-| ----------- | ---------------------------------------------- |
-| size        | Current number of events waiting in the queue. |
-| capacity    | Maximum queue capacity.                        |
-| utilization | Queue utilization percentage.                  |
+| Pole | Opis |
+|--------|--------|
+| size | Aktualna liczba zdarzeń oczekujących w kolejce |
+| capacity | Maksymalna pojemność kolejki |
+| utilization | Stopień wykorzystania kolejki |
 
-Queue utilization is calculated as:
+Wykorzystanie kolejki obliczane jest według wzoru:
 
 ```text
 (size / capacity) * 100
 ```
 
-### Error Metrics
+### Metryki Błędów
 
-The `errors` section contains aggregated information about runtime failures.
+Sekcja `errors` zawiera zagregowane informacje o błędach występujących podczas działania aplikacji.
 
-| Field | Description                                                |
-| ----- | ---------------------------------------------------------- |
-| total | Total number of errors detected since application startup. |
+| Pole | Opis |
+|--------|--------|
+| total | Łączna liczba błędów wykrytych od uruchomienia aplikacji |
 
-### Purpose of Heartbeat Events
+### Cel Zdarzeń Heartbeat
 
-Heartbeat events allow administrators to:
+Zdarzenia heartbeat umożliwiają administratorowi:
 
-* Verify that the monitoring service is running.
-* Monitor logger queue saturation.
-* Detect event processing bottlenecks.
-* Observe monitoring throughput.
-* Detect abnormal error accumulation.
-* Measure application uptime.
+* Weryfikację poprawnego działania usługi monitorującej.
+* Monitorowanie stopnia zapełnienia kolejki loggera.
+* Wykrywanie wąskich gardeł podczas przetwarzania zdarzeń.
+* Obserwację przepustowości systemu monitorowania.
+* Wykrywanie nadmiernej liczby błędów.
+* Pomiar czasu działania aplikacji.
 
-This information can be used to assess the health and performance of SysmonAgent independently of the monitored containers.
+Informacje te pozwalają ocenić stan i wydajność SysmonAgent niezależnie od monitorowanych kontenerów.
 
 ---
 
-## Logger Configuration
+## Konfiguracja Loggera
 
-The logger behavior can be configured using the `logger` section of the configuration file.
+Zachowanie loggera może być konfigurowane za pomocą sekcji `logger` w pliku konfiguracyjnym.
 
-Example:
+Przykład:
 
 ```json
 {
@@ -1001,27 +999,27 @@ Example:
 }
 ```
 
-### Logger Parameters
+### Parametry Loggera
 
-| Parameter      | Description                                                   |
-| -------------- | ------------------------------------------------------------- |
-| batchsize      | Maximum number of queued events written during a single flush |
-| flush_interval | Maximum number of seconds between automatic writes            |
-| log_filename   | Destination file used for JSON event storage                  |
+| Parametr | Opis |
+|-----------|--------|
+| batchsize | Maksymalna liczba zdarzeń zapisywanych podczas pojedynczego zapisu wsadowego |
+| flush_interval | Maksymalna liczba sekund pomiędzy automatycznymi zapisami |
+| log_filename | Nazwa pliku przeznaczonego do przechowywania zdarzeń JSON |
 
-The logger flushes events either when the batch size is reached or when the configured flush interval expires.
+Logger zapisuje dane, gdy zostanie osiągnięty rozmiar partii lub gdy upłynie skonfigurowany interwał zapisu.
 
 ---
 
-# 11. Error Handling
+# 11. Obsługa Błędów
 
-The system includes dedicated mechanisms for detecting and reporting runtime failures.
+System zawiera dedykowane mechanizmy wykrywania oraz raportowania błędów występujących podczas działania aplikacji.
 
-## Error Event Structure
+## Struktura Zdarzenia Błędu
 
-Errors are converted into structured JSON events.
+Błędy są konwertowane do ustrukturyzowanych zdarzeń JSON.
 
-Example:
+Przykład:
 
 ```json
 {
@@ -1034,172 +1032,170 @@ Example:
 }
 ```
 
-## Error Event Fields
+## Pola Zdarzenia Błędu
 
-| Field         | Description                                      |
-| ------------- | ------------------------------------------------ |
-| level         | Event severity level                             |
-| event         | Error event identifier                           |
-| action        | Collector or subsystem responsible for the error |
-| error_type    | Python exception type                            |
-| error_message | Exception message                                |
-| timestamp     | Error creation timestamp                         |
+| Pole | Opis |
+|--------|--------|
+| level | Poziom ważności zdarzenia |
+| event | Identyfikator zdarzenia błędu |
+| action | Kolektor lub podsystem odpowiedzialny za błąd |
+| error_type | Typ wyjątku języka Python |
+| error_message | Treść wyjątku |
+| timestamp | Znacznik czasu utworzenia błędu |
 
-## Collector Errors
+## Błędy Kolektorów
 
-Collector failures are isolated from the rest of the application.
+Awaria pojedynczego kolektora jest izolowana od pozostałych elementów aplikacji.
 
-If a collector fails:
+Jeżeli kolektor zakończy działanie błędem:
 
-* The exception is captured.
-* An error event is generated.
-* Other collectors continue execution.
+* wyjątek zostaje przechwycony,
+* generowane jest zdarzenie błędu,
+* pozostałe kolektory kontynuują działanie.
 
-This prevents a single collector failure from stopping the monitoring process.
+Dzięki temu awaria pojedynczego kolektora nie zatrzymuje procesu monitorowania.
 
-## Communication Errors
+## Błędy Komunikacji
 
-Possible communication failures include:
+Możliwe błędy komunikacyjne obejmują:
 
-* UNIX socket unavailable.
-* Server process unavailable.
-* Invalid requests.
-* Invalid responses.
+* niedostępny UNIX Socket,
+* niedostępny proces serwera,
+* niepoprawne żądania,
+* niepoprawne odpowiedzi.
 
-Communication failures are reported through error events whenever possible.
+Błędy komunikacyjne są raportowane poprzez zdarzenia błędów, gdy jest to możliwe.
 
-## Logging Errors
+## Błędy Loggera
 
-The logger handles failures related to:
+Logger obsługuje błędy związane z:
 
-* Invalid file paths.
-* Missing permissions.
-* JSON serialization failures.
-* File system errors.
+* nieprawidłowymi ścieżkami plików,
+* brakiem uprawnień,
+* błędami serializacji JSON,
+* błędami systemu plików.
 
-These failures are isolated from collector execution to prevent monitoring interruptions.
-
----
-
-# 12. Monitoring Process
-
-The monitoring process follows these steps:
-
-1. Application startup.
-2. Configuration loading.
-3. Collector scheduling.
-4. Request transmission to the server.
-5. Metric collection through Docker SDK.
-6. Metric filtering.
-7. Event creation.
-8. Event logging.
+Błędy te są odizolowane od działania kolektorów, aby nie przerywać procesu monitorowania.
 
 ---
 
-# 13. Testing
+# 12. Proces Monitorowania
 
-## Tested Scenarios
+Proces monitorowania przebiega według następujących kroków:
 
-### Startup Tests
-
-* Server startup.
-* Client startup.
-* Docker Compose deployment.
-
-### Communication Tests
-
-* UNIX socket connection.
-* Request handling.
-* Response handling.
-
-### Monitoring Tests
-
-* CPU metric collection.
-* Memory metric collection.
-* Network metric collection.
-
-### Logging Tests
-
-* Event creation.
-* Batch writing.
-* Log persistence.
+1. Uruchomienie aplikacji.
+2. Wczytanie konfiguracji.
+3. Zaplanowanie kolektorów.
+4. Wysłanie żądania do serwera.
+5. Pobranie metryk przy użyciu Docker SDK.
+6. Filtrowanie metryk.
+7. Utworzenie zdarzenia.
+8. Zapisanie zdarzenia do logów.
 
 ---
 
+# 13. Testowanie
 
-# 14. Known Limitations
+## Przetestowane Scenariusze
 
-Although SysmonAgent fulfills its design objectives, several limitations remain.
+### Testy Uruchomienia
 
-## Single Host Monitoring
+* Uruchomienie serwera.
+* Uruchomienie klienta.
+* Wdrożenie przy użyciu Docker Compose.
 
-The current implementation supports monitoring only a single Docker host.
+### Testy Komunikacji
 
-Distributed monitoring is not implemented.
+* Połączenie przez UNIX Socket.
+* Obsługa żądań.
+* Obsługa odpowiedzi.
 
-## Local JSON Storage
+### Testy Monitorowania
 
-Monitoring events are stored in JSON files.
+* Pobieranie metryk CPU.
+* Pobieranie metryk pamięci.
+* Pobieranie metryk sieciowych.
 
-The system currently does not support:
+### Testy Logowania
+
+* Tworzenie zdarzeń.
+* Zapis wsadowy.
+* Trwały zapis logów.
+
+---
+
+# 14. Znane Ograniczenia
+
+Pomimo spełnienia założeń projektowych SysmonAgent posiada kilka ograniczeń.
+
+## Monitorowanie Pojedynczego Hosta
+
+Obecna implementacja obsługuje monitorowanie wyłącznie jednego hosta Docker.
+
+Monitorowanie rozproszone nie zostało zaimplementowane.
+
+## Lokalne Przechowywanie Logów
+
+Zdarzenia monitorujące przechowywane są w plikach JSON.
+
+System obecnie nie obsługuje:
 
 * PostgreSQL
 * MySQL
 * Elasticsearch
-* Time-series databases
+* Baz danych typu Time-Series
 
-## No Alerting System
+## Brak Systemu Alertów
 
-The application collects and stores metrics but does not actively notify administrators when thresholds are exceeded.
+Aplikacja zbiera i zapisuje metryki, lecz nie powiadamia administratorów o przekroczeniu progów alarmowych.
 
-Potential future integrations include:
+Możliwe przyszłe integracje obejmują:
 
-* Email notifications
-* Slack notifications
-* Webhooks
+* Powiadomienia e-mail
+* Powiadomienia Slack
+* Webhooki
 * Microsoft Teams
 
-## Limited Collector Set
+## Ograniczony Zestaw Kolektorów
 
-The current implementation provides a single collector:
+Aktualna implementacja udostępnia jeden kolektor:
 
 * container_stats
 
-Additional collectors may be implemented in future versions.
+Dodatkowe kolektory mogą zostać zaimplementowane w kolejnych wersjach projektu.
 
-## No Historical Analytics
+## Brak Analizy Historycznej
 
-The system focuses on metric collection and storage.
+System skupia się na zbieraniu i przechowywaniu metryk.
 
-Trend analysis, aggregation and visualization are outside the scope of the current implementation.
+Analiza trendów, agregacja danych oraz wizualizacja wyników nie należą do zakresu obecnej implementacji.
 
-## Platform Scope
+## Zakres Platform
 
-The project was developed and tested primarily on:
+Projekt był rozwijany i testowany głównie na:
 
 * Windows 11
 * WSL2
 * Ubuntu
 * Docker Desktop
 
-Additional validation may be required for other environments.
+W przypadku innych środowisk może być wymagana dodatkowa walidacja.
 
+# 15. Możliwe Kierunki Rozwoju
 
-# 15. Future Improvements
+Potencjalne usprawnienia projektu obejmują:
 
-Potential future improvements include:
-
-* PostgreSQL storage backend.
-* Alerting system.
-* Multi-host monitoring.
-* Historical metrics analysis.
-* Web dashboard.
-* Multi threading for multiple containers
+* Integrację z PostgreSQL.
+* System alertów.
+* Monitorowanie wielu hostów.
+* Analizę historycznych metryk.
+* Panel webowy.
+* Wielowątkowe monitorowanie wielu kontenerów.
 
 ---
 
-# 16. Conclusion
+# 16. Podsumowanie
 
-SysmonAgent demonstrates a secure approach to Docker container monitoring through a client-server architecture and UNIX socket communication.
+SysmonAgent prezentuje bezpieczne podejście do monitorowania kontenerów Docker poprzez zastosowanie architektury klient-serwer oraz komunikacji opartej o UNIX Socket.
 
-The project achieves its primary objectives by collecting container metrics while maintaining isolation from Docker Engine and supporting future extensibility.
+Projekt realizuje swoje główne cele poprzez zbieranie metryk kontenerów przy jednoczesnym zachowaniu izolacji od Docker Engine oraz zapewnieniu możliwości dalszej rozbudowy.
