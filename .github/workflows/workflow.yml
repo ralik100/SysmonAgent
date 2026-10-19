@@ -8,7 +8,7 @@ on:
       - 'main'
     paths-ignore:
       - 'docs/**'
-  workflow-dispatch:
+  workflow_dispatch:
     
 jobs:
   build:
@@ -28,3 +28,5 @@ jobs:
 
     - name: Start (temporary)
       run: start.bat
+      timeout-minutes: 2
+    
