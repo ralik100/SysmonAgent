@@ -30,10 +30,22 @@ jobs:
       run: mkdir -p /tmp/socket
        
     - name: Start Server
+      id: server
+      background: true
       run: python src/server/main.py
     
     - name: Run Client Container Setup
+      id: client
+      background: true
       run: docker compose up --build
+
+    - name: Stop server
+      if: always()
+      cancel: server
+
+    - name: Stop client
+      if: always()
+      cancel: client
   
   test:
     runs-on: ubuntu-22.04
@@ -55,9 +67,13 @@ jobs:
       run: mkdir -p /tmp/socket
        
     - name: Start Server
+      id: server
+      background: true
       run: python src/server/main.py
     
     - name: Run Client Container Setup
+      id: client
+      background: true
       run: docker compose up --build
 
     - name: Hardcoded wait for logs (for removal)
@@ -67,4 +83,12 @@ jobs:
     - name: Run Tests
       run: pytest -v
       timeout-minutes: 2
+
+    - name: Stop server
+      if: always()
+      cancel: server
+
+    - name: Stop client
+      if: always()
+      cancel: client
     
