@@ -40,11 +40,9 @@ jobs:
       run: docker compose up --build
 
     - name: Stop server
-      if: always()
       cancel: server
 
     - name: Stop client
-      if: always()
       cancel: client
   
   test:
@@ -85,10 +83,8 @@ jobs:
       timeout-minutes: 2
 
     - name: Stop server
-      if: always()
       cancel: server
 
     - name: Stop client
-      if: always()
       cancel: client
     
