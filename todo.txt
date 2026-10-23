@@ -1,0 +1,5 @@
+develop subprocessing in main.py
+server should handle multiple clients
+every client should have own thread
+add more collectors
+fix client.py

@@ -92,11 +92,11 @@ jobs:
 
     - name: Generate test report
       run: |
-      echo "# Test report:" >> "$GITHUB_STEP_SUMMARY"
-      echo "" >> "$GITHUB_STEP_SUMMARY"
-      echo '```text' >> "$GITHUB_STEP_SUMMARY"
-      cat wynik.txt >> "$GITHUB_STEP_SUMMARY"
-      echo '```'>> "$GITHUB_STEP_SUMMARY"
+        echo "# Test report:" >> "$GITHUB_STEP_SUMMARY"
+        echo "" >> "$GITHUB_STEP_SUMMARY"
+        echo '```text' >> "$GITHUB_STEP_SUMMARY"
+        cat wynik.txt >> "$GITHUB_STEP_SUMMARY"
+        echo '```'>> "$GITHUB_STEP_SUMMARY"
     
     - name: Set tests result
       if: steps.tests.outcome == 'failure'

@@ -24,6 +24,7 @@ import collectors.collector
 import threading
 import stats
 import socket
+import os
 
 
 # Mapowanie identyfikatorów kolektorów z pliku konfiguracji
@@ -38,58 +39,7 @@ COLLECTORS_MAP = {
 SOCKET_PATH = "/tmp/socket/metrics.sock"
 
 
-def load_config():
-    """
-    Wczytuje konfigurację aplikacji z pliku config.json.
 
-    Funkcja odczytuje wszystkie parametry konfiguracyjne oraz
-    tworzy słownik zawierający wyłącznie kolektory aktywowane
-    przez użytkownika.
-
-    Zwraca:
-        tuple:
-            mode (str)
-            intervals (dict)
-            active_collectors (dict)
-            warning_threshold (int)
-            logger_config (dict)
-            heartbeat_conf (dict)
-            container_names (list[str])
-
-    Wyjątki:
-        FileNotFoundError:
-            Jeśli plik config.json nie istnieje.
-
-        json.JSONDecodeError:
-            Jeśli plik konfiguracji zawiera niepoprawny JSON.
-    """
-
-    with open("config.json", "r") as f:
-        config = json.load(f)
-
-    collectors = config["collectors"]
-    intervals = config["intervals"]
-    warning_threshold = config["warning_threshold"]
-    heartbeat_conf = config["heartbeat"]
-    logger_config = config["logger"]
-    mode = config["mode"]
-    container_names = config["monitored_container_names"]
-
-    active_collectors = {}
-
-    for (key, collector) in COLLECTORS_MAP.items():
-        if key in collectors:
-            active_collectors[key] = collector
-
-    return (
-        mode,
-        intervals,
-        active_collectors,
-        warning_threshold,
-        logger_config,
-        heartbeat_conf,
-        container_names
-    )
 
 
 def connect_to_socket():
@@ -166,25 +116,10 @@ def main():
 
     stop_event = threading.Event()
 
-    (
-        mode,
-        intervals,
-        active_collectors,
-        warning_threshold,
-        logger_config,
-        heartbeat_conf,
-        container_names
-    ) = load_config()
-
-    heartbeat_enabled = heartbeat_conf["enabled"]
-
-    log_file = logger_config["log_filename"]
-    batch_size = logger_config["batchsize"]
-    flush_interval = logger_config["flush_interval"]
 
     socket_client = connect_to_socket()
 
-    logger.init(log_file)
+    logger.init(log_file, log_file_path)
 
     # Dedykowany wątek odpowiedzialny za asynchroniczny
     # zapis zdarzeń do pliku.

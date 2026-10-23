@@ -8,4 +8,4 @@ RUN pip install -r requirements.txt
 
 COPY /src/agent .
 
-ENTRYPOINT ["python","main.py"]
+ENTRYPOINT ["python","client.py"]
