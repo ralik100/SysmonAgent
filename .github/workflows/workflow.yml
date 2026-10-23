@@ -79,12 +79,25 @@ jobs:
       run: Start-Sleep -Seconds 20
 
     - name: Run Tests
-      run: pytest -v
+      id: tests
+      run: pytest -v > wynik.txt 2>&1
       timeout-minutes: 2
+      continue-on-error: true
 
     - name: Stop server
       cancel: server
 
     - name: Stop client
       cancel: client
+
+    - name: Generate test report
+      run: |
+      echo "# Test report:" >> "$GITHUB_STEP_SUMMARY"
+      echo "" >> "$GITHUB_STEP_SUMMARY"
+      echo '```text' >> "$GITHUB_STEP_SUMMARY"
+      cat wynik.txt >> "$GITHUB_STEP_SUMMARY"
+      echo '```'>> "$GITHUB_STEP_SUMMARY"
     
+    - name: Set tests result
+      if: steps.tests.outcome == 'failure'
+      run: exit 1
