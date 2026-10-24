@@ -41,6 +41,5 @@ def main():
 
     server_methods.close_connection(client)
 
-
 if __name__ == "__main__":
     main()

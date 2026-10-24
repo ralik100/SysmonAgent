@@ -212,6 +212,5 @@ def main():
 
         disconnect_socket(socket_client)
 
-
 if __name__ == "__main__":
     main()

@@ -7,6 +7,9 @@ import threading
 import stats
 import socket
 import os
+import src.agent.client as client
+import src.server.server as server
+import subprocess
 
 def load_config():
     """
@@ -64,10 +67,12 @@ def setup_environment_variables(environment_variables):
     for key, value in environment_variables.items():
         os.environ(key) = value
 
-
+def end_logging(client_result, server_result):
+    pass
 
 def main():
-    (
+
+    client_configuration = (
         mode,
         interval_configuration,
         collectors_configuration,
@@ -78,15 +83,30 @@ def main():
         environment_variables
     ) = load_config()
 
-    heartbeat_enabled = heartbeat_configuration["enabled"]
-
-    log_file = logging_configuration["log_filename"]
-    log_file_path = logging_configuration["log_file_path"]
-    batch_size = logging_configuration["batchsize"]
-    flush_interval = logging_configuration["flush_interval"]
-
 
     setup_environment_variables(environment_variables)
+
+    client = subprocess.Popen(
+        ["python", "/agent/client.py"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+
+    server = subprocess.Popen(
+        ["python", "/server/server.py"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+
+    client_stdout, client_stderr = client.communicate()
+    server_stdout, server_stderr = server.communicate()
+
+    client_result = (client_stdout, client_stderr)
+    server_result = (server_stdout, server_stderr)
+
+    end_logging(client_result, server_result)
 
 if __name__ == "__main__":
     main()
