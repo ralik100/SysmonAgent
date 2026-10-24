@@ -1,4 +1,6 @@
-develop subprocessing in main.py
+develop subprocessing in main.py 
+
+decide what about running client inside container
 server should handle multiple clients
 every client should have own thread
 add more collectors

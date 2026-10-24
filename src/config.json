@@ -1,5 +1,5 @@
 {
-  "mode" : "loop",
+  "loop" : "loop",
   "interval_configuration": {"container_stats" : 5}, 
   "collectors_configuration": ["container_stats"],
   "heartbeat_configuration" : {"enabled" : true, "interval" : 15},

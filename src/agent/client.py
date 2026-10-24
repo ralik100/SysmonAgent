@@ -82,7 +82,7 @@ def disconnect_socket(socket_client):
     socket_client.close()
 
 
-def main():
+def main(mode : str, interval_configuration : dict, collectors_configuration : list[str], warning_threshold : int, logging_configuration : dict, heartbeat_configuration : dict, container_names : list[str], environment_variables : dict):
     """
     Główny punkt wejścia aplikacji.
 
@@ -111,6 +111,8 @@ def main():
         ValueError:
             Jeśli skonfigurowano nieobsługiwany tryb działania.
     """
+
+    
 
     statistics = stats.Telemetry()
 
