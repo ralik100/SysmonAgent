@@ -6,6 +6,6 @@ COPY requirements.txt .
 
 RUN pip install -r requirements.txt
 
-COPY agent .
+COPY agent filehandler.py ./src/
 
-ENTRYPOINT ["python","client.py"]
+ENTRYPOINT ["python","src/client.py"]

@@ -6,5 +6,5 @@
   "logging_configuration" : {"batchsize" : 10, "flush_interval" : 2, "log_filename" : "log.json"},
   "warning_threshold": 70,
   "monitored_container_names": ["sysmonagent-postgres-1"],
-  "environment_variables" : {"DATA_PATH" : "C:/SysmonAgentLogs/"}
+  "environment_variables" : {"DATA_PATH" : "C:/SysmonAgentLogs/", "SOCKET_PATH" : "/tmp/socket/metrics.sock"}
 }

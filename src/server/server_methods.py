@@ -35,7 +35,7 @@ docker_client = docker.from_env()
 
 # Ścieżka gniazda UNIX Socket współdzielonego pomiędzy serwerem
 # a agentem monitorującym.
-SOCKET_PATH = "/tmp/socket/metrics.sock"
+SOCKET_PATH = os.environ.get("SOCKET_PATH")
 
 
 def perform_request(request):

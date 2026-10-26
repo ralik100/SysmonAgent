@@ -25,7 +25,8 @@ import threading
 import stats
 import socket
 import os
-
+import argparse
+import filehandler
 
 # Mapowanie identyfikatorów kolektorów z pliku konfiguracji
 # na odpowiadające im funkcje implementacyjne.
@@ -82,7 +83,7 @@ def disconnect_socket(socket_client):
     socket_client.close()
 
 
-def main(mode : str, interval_configuration : dict, collectors_configuration : list[str], warning_threshold : int, logging_configuration : dict, heartbeat_configuration : dict, container_names : list[str], environment_variables : dict):
+def main():
     """
     Główny punkt wejścia aplikacji.
 
@@ -112,7 +113,27 @@ def main(mode : str, interval_configuration : dict, collectors_configuration : l
             Jeśli skonfigurowano nieobsługiwany tryb działania.
     """
 
-    
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--config",
+        required=True,
+        help="Path to JSON configuration file"
+    )
+
+    args = parser.parse_args()
+    config_file_path = args.config
+
+    client_configuration = (
+        mode,
+        interval_configuration,
+        collectors_configuration,
+        warning_threshold,
+        logging_configuration,
+        heartbeat_configuration,
+        container_names,
+        environment_variables
+    ) = filehandler.load_config(config_file_path)
 
     statistics = stats.Telemetry()
 
@@ -120,6 +141,9 @@ def main(mode : str, interval_configuration : dict, collectors_configuration : l
 
 
     socket_client = connect_to_socket()
+
+    log_file = logging_configuration["log_filename"]
+    log_file_path = os.path("output/")
 
     logger.init(log_file, log_file_path)
 

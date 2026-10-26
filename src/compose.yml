@@ -7,12 +7,14 @@ services:
     image: ralik100/sysag:client_v1
 
     volumes:
-      - /tmp/socket/metrics.sock:/tmp/socket/metrics.sock
-      - ./src/agent/output:/output
+      - ${SOCKET_PATH}:/socket/metrics.sock
+      - ${DATA_PATH}:/output
+      - ${CONFIG_FILE_PATH}:/src/config.json
     
     depends_on:
       postgres:
         condition: service_healthy
+    command: ["python", "client.py" ,"--config", "src/config.json"]
   postgres:
     image: postgres:16-alpine
     healthcheck:

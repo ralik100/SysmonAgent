@@ -1,7 +1,8 @@
 develop subprocessing in main.py 
 
-decide what about running client inside container
+decide what about environment variables = use them for manipulating pathing and values in container or not
+fix client.py
+
 server should handle multiple clients
 every client should have own thread
 add more collectors
-fix client.py

@@ -1,65 +1,8 @@
-import loop
-import logger
-import heartbeat
-import json
-import collectors.collector
-import threading
-import stats
-import socket
 import os
-import src.agent.client as client
 import src.server.server as server
 import subprocess
-
-def load_config():
-    """
-    Wczytuje konfigurację aplikacji z pliku config.json.
-
-    Funkcja odczytuje wszystkie parametry konfiguracyjne oraz
-    tworzy słownik zawierający wyłącznie kolektory aktywowane
-    przez użytkownika.
-
-    Zwraca:
-        tuple:
-            mode (str)
-            intervals (dict)
-            active_collectors (dict)
-            warning_threshold (int)
-            logger_config (dict)
-            heartbeat_conf (dict)
-            container_names (list[str])
-
-    Wyjątki:
-        FileNotFoundError:
-            Jeśli plik config.json nie istnieje.
-
-        json.JSONDecodeError:
-            Jeśli plik konfiguracji zawiera niepoprawny JSON.
-    """
-
-    with open("config.json", "r") as f:
-        config = json.load(f)
-
-    mode = config["mode"]
-    interval_configuration = config["interval_configuration"]    
-    collectors_configuration = config["collectors_configuration"]
-    warning_threshold = config["warning_threshold"]
-    logging_configuration = config["logging_configuration"]
-    heartbeat_configuration = config["heartbeat_configuration"]
-    container_names = config["monitored_container_names"]
-    environment_variables = config["environment_variables"]
-
-
-    return (
-        mode,
-        interval_configuration,
-        collectors_configuration,
-        warning_threshold,
-        logging_configuration,
-        heartbeat_configuration,
-        container_names,
-        environment_variables
-    )
+import argparse
+import filehandler
 
 
 def setup_environment_variables(environment_variables):
@@ -72,6 +15,17 @@ def end_logging(client_result, server_result):
 
 def main():
 
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--config",
+        required=True,
+        help="Path to JSON configuration file"
+    )
+
+    args = parser.parse_args()
+    config_file_path = args.config
+
     client_configuration = (
         mode,
         interval_configuration,
@@ -81,13 +35,14 @@ def main():
         heartbeat_configuration,
         container_names,
         environment_variables
-    ) = load_config()
+    ) = filehandler.load_config(config_file_path)
 
+    environment_variables["CONFIG_FILE_PATH"]=config_file_path
 
     setup_environment_variables(environment_variables)
 
     client = subprocess.Popen(
-        ["python", "/agent/client.py"],
+        ["docker","compose","up","--build"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True
